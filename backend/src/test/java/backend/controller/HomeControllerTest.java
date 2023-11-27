@@ -47,4 +47,20 @@ public class HomeControllerTest {
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
         verify(homeService, times(1)).getAllUsers("test@email.com", "testPassword");
     }
+
+
+    @Test
+    void testDeleteUser() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.put("/home")
+                        .param("email", "test@email.com")
+                        .param("password", "testPassword")
+                        .param("userToDeleteEmail", "userToDelete@email.com"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        verify(homeService, times(1)).deleteUser("test@email.com", "testPassword", "userToDelete@email.com");
+    }
+
+
+
+
 }

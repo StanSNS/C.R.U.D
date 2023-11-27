@@ -39,7 +39,6 @@ public class AuthController {
             return new ResponseEntity<>(USER_EMAIL_EXIST, HttpStatus.IM_USED);
         }
         return new ResponseEntity<>(USER_REGISTER_SUCCESSFULLY, HttpStatus.CREATED);
-
     }
 
     /**
@@ -51,7 +50,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> register(@RequestBody LoginDTO loginDTO) {
         return new ResponseEntity<>(authService.login(loginDTO), HttpStatus.OK);
-
     }
 
 }

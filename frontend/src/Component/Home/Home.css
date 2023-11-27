@@ -58,7 +58,7 @@
 }
 
 .reduceFontSize {
-    font-size: 10.5px;
+    font-size: 13.5px;
 }
 
 .pinkWordColor {
@@ -71,4 +71,12 @@
 
 .yellowWordColor {
     color: #fff200;
+}
+
+.customBin{
+    scale: 1.5;
+    margin-left: 48%;
+    border: none;
+    background: none;
+    color: #dc1c1c;
 }

@@ -2,6 +2,7 @@ package backend.service;
 
 import backend.dto.UserDetailsDTO;
 import backend.entity.UserEntity;
+import backend.exception.ResourceNotFoundException;
 import backend.repository.UserEntityRepository;
 import backend.util.ValidateData;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -38,7 +40,7 @@ public class HomeServiceTest {
         String email = "test@example.com";
         String password = "password";
 
-        UserEntity mockedUserEntity = new UserEntity(/* Set up the UserEntity instance */);
+        UserEntity mockedUserEntity = new UserEntity();
         when(validateData.validateUserWithPassword(email, password)).thenReturn(mockedUserEntity);
 
         ArrayList<UserEntity> mockedUserEntities = new ArrayList<>();
@@ -61,5 +63,44 @@ public class HomeServiceTest {
         verify(userEntityRepository, times(1)).findAll();
         verify(modelMapper, times(mockedUserEntities.size())).map(any(), eq(UserDetailsDTO.class));
     }
+
+
+    @Test
+    void testDeleteUser_ValidCredentialsAndUserExists_DeletesUser() {
+        String email = "test@example.com";
+        String password = "password";
+        String userToDeleteEmail = "userToDelete@example.com";
+
+        UserEntity userEntity = new UserEntity();
+
+        when(validateData.validateUserWithPassword(email, password)).thenReturn(userEntity);
+        when(userEntityRepository.findByEmail(userToDeleteEmail)).thenReturn(userEntity);
+
+        homeService.deleteUser(email, password, userToDeleteEmail);
+
+        verify(validateData, times(1)).validateUserWithPassword(email, password);
+        verify(userEntityRepository, times(1)).findByEmail(userToDeleteEmail);
+        verify(userEntityRepository, times(1)).delete(userEntity);
+    }
+
+    @Test
+    void testDeleteUser_UserNotFound_ThrowsResourceNotFoundException() {
+        String email = "test@example.com";
+        String password = "password";
+        String userToDeleteEmail = "nonExistingUser@example.com";
+
+        UserEntity userEntity = new UserEntity();
+
+        when(validateData.validateUserWithPassword(email, password)).thenReturn(userEntity);
+        when(userEntityRepository.findByEmail(userToDeleteEmail)).thenReturn(null);
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> homeService.deleteUser(email, password, userToDeleteEmail));
+
+        verify(validateData, times(1)).validateUserWithPassword(email, password);
+        verify(userEntityRepository, times(1)).findByEmail(userToDeleteEmail);
+        verify(userEntityRepository, never()).delete(any());
+    }
+
 
 }

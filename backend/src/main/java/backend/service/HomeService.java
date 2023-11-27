@@ -1,6 +1,8 @@
 package backend.service;
 
 import backend.dto.UserDetailsDTO;
+import backend.entity.UserEntity;
+import backend.exception.ResourceNotFoundException;
 import backend.repository.UserEntityRepository;
 import backend.util.ValidateData;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +16,21 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class HomeService {
 
+    /**
+     * initializing dependencies with lombok @RequiredArgsConstructor
+     */
     private final ValidateData validateData;
     private final UserEntityRepository userEntityRepository;
     private final ModelMapper modelMapper;
 
+
+    /**
+     * Retrieves a list of all users.
+     *
+     * @param email    The email of the requesting user.
+     * @param password The password of the requesting user.
+     * @return A list of UserDetailsDTO representing all users.
+     */
     public List<UserDetailsDTO> getAllUsers(String email, String password) {
         validateData.validateUserWithPassword(email, password);
 
@@ -27,6 +40,26 @@ public class HomeService {
                 .map(user -> modelMapper
                         .map(user, UserDetailsDTO.class))
                 .collect(Collectors.toList());
+    }
+
+
+    /**
+     * Deletes a user based on the provided email.
+     *
+     * @param email               The email of the requesting user.
+     * @param password            The password of the requesting user.
+     * @param userToDeleteEmail   The email of the user to be deleted.
+     * @throws ResourceNotFoundException If the user to be deleted is not found.
+     */
+    public void deleteUser(String email, String password, String userToDeleteEmail) {
+        validateData.validateUserWithPassword(email, password);
+
+        UserEntity userEntityToDelete = userEntityRepository.findByEmail(userToDeleteEmail);
+        if (userEntityToDelete == null) {
+            throw new ResourceNotFoundException();
+        }
+
+        userEntityRepository.delete(userEntityToDelete);
     }
 
 

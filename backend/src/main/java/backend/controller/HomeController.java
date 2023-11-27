@@ -39,6 +39,25 @@ public class HomeController {
     @GetMapping("/home")
     public ResponseEntity<List<UserDetailsDTO>> getAllUsers(@RequestParam String email, @RequestParam String password) {
         return new ResponseEntity<>(homeService.getAllUsers(email, password), HttpStatus.OK);
+    }
 
+
+    /**
+     * Deletes a user based on the provided email.
+     * <p>
+     * This endpoint is mapped to "/home" using the HTTP PUT method. It requires three
+     * request parameters, "email", "password", and "userToDeleteEmail", to authenticate and delete a user.
+     *
+     * @param email               The email of the user for authentication.
+     * @param password            The password of the user for authentication.
+     * @param userToDeleteEmail   The email of the user to be deleted.
+     * @return ResponseEntity<?> A response entity with no content and a status of HttpStatus.OK if the user deletion is successful.
+     * @apiNote This endpoint is designed to be used for deleting a user by providing valid email and password credentials,
+     * and the email of the user to be deleted.
+     */
+    @PutMapping("/home")
+    public ResponseEntity<?> getAllUsers(@RequestParam String email, @RequestParam String password, @RequestParam String userToDeleteEmail) {
+        homeService.deleteUser(email, password, userToDeleteEmail);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
