@@ -29,10 +29,26 @@ const decryptData = (data) => {
     }
 }
 
-
 // Save user information securely in session storage.
 export const saveLoggedUser = (email, password, roles) => {
     sessionStorage.setItem("Email", encryptData(email));
     sessionStorage.setItem("Password", encryptData(password));
     sessionStorage.setItem("Roles", encryptData(roles));
 }
+
+// Function to retrieve the logged-in user's email from session storage and decrypt it.
+export const loggedUserEmail = () => {
+    const email = sessionStorage.getItem("Email");
+    if (email) {
+        return decryptData(email);
+    }
+}
+
+// Function to retrieve the logged-in user's password from session storage and decrypt it.
+export const loggedUserPassword = () => {
+    const password = sessionStorage.getItem("Password");
+    if (password) {
+        return decryptData(password);
+    }
+}
+

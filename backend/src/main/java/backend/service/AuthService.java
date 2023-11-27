@@ -12,9 +12,11 @@ import backend.exception.ResourceNotFoundException;
 import backend.repository.RoleEntityRepository;
 import backend.repository.UserEntityRepository;
 import backend.util.CustomDateFormatter;
+import backend.util.LocationInfo;
 import backend.util.ValidationUtil;
+import io.ipgeolocation.api.Geolocation;
+import io.ipgeolocation.api.IPGeolocationAPI;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,10 +25,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static backend.constants.OtherConst.GEOLOCATION_API_KEY;
 import static backend.constants.ResponseConst.USER_EMAIL_EXIST;
 import static backend.constants.ResponseConst.USER_REGISTER_SUCCESSFULLY;
 import static backend.constants.RoleConst.ADMIN_CONSTANT;
@@ -46,6 +50,7 @@ public class AuthService {
     private final ModelMapper modelMapper;
     private final ValidationUtil validationUtil;
     private final CustomDateFormatter customDateFormatter;
+    private final LocationInfo locationInfo;
 
 
     /**
@@ -68,6 +73,9 @@ public class AuthService {
         UserEntity userEntity = modelMapper.map(registerDto, UserEntity.class);
         userEntity.setPassword(passwordEncoder.encode(registerDto.getPassword()));
         userEntity.setDateOfBirth(customDateFormatter.convertToLocalDateFormat(registerDto.getDateOfBirth()));
+        userEntity.setRegisterDate(customDateFormatter.formatLocalDateTimeNowAsString(LocalDateTime.now()));
+
+        locationInfo.setUserLocations(userEntity);
 
         Set<RoleEntity> roles = new HashSet<>();
         if (userRepository.count() == 0) {
@@ -104,7 +112,7 @@ public class AuthService {
         AuthResponseDTO authResponseDTO = new AuthResponseDTO();
 
         authResponseDTO.setEmail(loginDto.getEmail());
-        authResponseDTO.setPassword(DigestUtils.sha256Hex(loginDto.getPassword()));
+        authResponseDTO.setPassword(loginDto.getPassword());
         authResponseDTO.setRoles(userEntity
                 .getRoles()
                 .stream()

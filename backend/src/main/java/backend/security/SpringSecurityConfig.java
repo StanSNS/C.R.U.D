@@ -50,7 +50,8 @@ public class SpringSecurityConfig implements WebMvcConfigurer {
             authorize.requestMatchers(
                     "/",
                     "/auth/login",
-                    "/auth/register"
+                    "/auth/register",
+                    "/home"
             ).permitAll();
             authorize.anyRequest().authenticated();
         });

@@ -11,6 +11,7 @@ import backend.exception.ResourceNotFoundException;
 import backend.repository.RoleEntityRepository;
 import backend.repository.UserEntityRepository;
 import backend.util.CustomDateFormatter;
+import backend.util.LocationInfo;
 import backend.util.ValidationUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,9 @@ public class AuthServiceTest {
 
     @Mock
     private CustomDateFormatter customDateFormatter;
+
+    @Mock
+    private LocationInfo locationInfo;
 
     @Mock
     private AuthenticationManager authenticationManager;
@@ -166,7 +170,7 @@ public class AuthServiceTest {
         AuthResponseDTO result = authService.login(loginDto);
 
         assertEquals(loginDto.getEmail(), result.getEmail());
-        assertEquals("5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8", result.getPassword());
+        assertEquals("password", result.getPassword());
 
         verify(validationUtil, times(2)).isValid(any());
         verify(userRepository, times(1)).findByEmail(any());

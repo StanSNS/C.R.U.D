@@ -45,8 +45,11 @@ export default function Register() {
             setError("First name and last name cannot be empty.");
         } else if (!email.includes("@")) {
             setError("Please enter a valid email address.");
-        } else if (password !== confirmPassword) {
+        } else if (!dateOfBirth) {
+            setError("Date if birth cannot be empty!")
+        } else if(password !== confirmPassword){
             setError("Passwords do not match.");
+
         } else {
             setError("");
 

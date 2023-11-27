@@ -32,6 +32,18 @@ public class UserEntity extends BaseEntity {
     @Column
     private String password;
 
+    @Column
+    private String registerDate;
+
+    @Column
+    private String country;
+
+    @Column
+    private String currency;
+
+    @Column
+    private String city;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
