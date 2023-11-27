@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.HashSet;
 
+import static backend.constants.ResponseConst.USER_EMAIL_EXIST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -33,7 +34,7 @@ public class AuthControllerTests {
     @Test
     void testRegister() {
         RegisterDTO registerDTO = new RegisterDTO();
-        String expectedResponse = "User successfully registered";
+        String expectedResponse = "User registered successfully!";
 
         when(authService.register(registerDTO)).thenReturn(expectedResponse);
 
@@ -61,5 +62,19 @@ public class AuthControllerTests {
         assertEquals(expectedResponse, responseEntity.getBody());
 
         verify(authService, times(1)).login(loginDTO);
+    }
+
+    @Test
+    void testRegisterUserEmailExist() {
+        RegisterDTO registerDTO = new RegisterDTO();
+
+        when(authService.register(registerDTO)).thenReturn(USER_EMAIL_EXIST);
+
+        ResponseEntity<String> responseEntity = authController.register(registerDTO);
+
+        assertEquals(HttpStatus.IM_USED, responseEntity.getStatusCode());
+        assertEquals(USER_EMAIL_EXIST, responseEntity.getBody());
+
+        verify(authService, times(1)).register(registerDTO);
     }
 }

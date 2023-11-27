@@ -26,7 +26,7 @@ public class UserEntity extends BaseEntity {
     @Column
     private String phoneNumber;
 
-    @Column
+    @Column(unique = true)
     private String email;
 
     @Column

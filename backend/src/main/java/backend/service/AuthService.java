@@ -11,6 +11,7 @@ import backend.exception.ResourceAlreadyExistsException;
 import backend.exception.ResourceNotFoundException;
 import backend.repository.RoleEntityRepository;
 import backend.repository.UserEntityRepository;
+import backend.util.CustomDateFormatter;
 import backend.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -26,6 +27,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static backend.constants.ResponseConst.USER_EMAIL_EXIST;
 import static backend.constants.ResponseConst.USER_REGISTER_SUCCESSFULLY;
 import static backend.constants.RoleConst.ADMIN_CONSTANT;
 import static backend.constants.RoleConst.USER_CONSTANT;
@@ -43,6 +45,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final ModelMapper modelMapper;
     private final ValidationUtil validationUtil;
+    private final CustomDateFormatter customDateFormatter;
 
 
     /**
@@ -59,12 +62,12 @@ public class AuthService {
         }
 
         if (userRepository.existsByEmail(registerDto.getEmail())) {
-            throw new ResourceAlreadyExistsException();
+            return USER_EMAIL_EXIST;
         }
 
         UserEntity userEntity = modelMapper.map(registerDto, UserEntity.class);
-
         userEntity.setPassword(passwordEncoder.encode(registerDto.getPassword()));
+        userEntity.setDateOfBirth(customDateFormatter.convertToLocalDateFormat(registerDto.getDateOfBirth()));
 
         Set<RoleEntity> roles = new HashSet<>();
         if (userRepository.count() == 0) {

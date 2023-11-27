@@ -2,10 +2,12 @@ package backend.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Past;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -19,7 +21,8 @@ public class RegisterDTO {
     private String lastName;
 
     @NotNull
-    private String dateOfBirth;
+    @Past
+    private LocalDate dateOfBirth;
 
     @NotNull
     private String phoneNumber;
@@ -28,7 +31,6 @@ public class RegisterDTO {
     @NotNull
     private String email;
 
-    @Size(min = 8)
     @NotNull
     private String password;
 }
