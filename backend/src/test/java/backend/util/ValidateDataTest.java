@@ -1,5 +1,6 @@
 package backend.util;
 
+import backend.entity.RoleEntity;
 import backend.entity.UserEntity;
 import backend.exception.AccessDeniedException;
 import backend.repository.UserEntityRepository;
@@ -10,8 +11,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.HashSet;
+import java.util.Set;
+
+import static backend.constants.RoleConst.ADMIN_CONSTANT;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -61,5 +65,32 @@ public class ValidateDataTest {
 
         assertThrows(AccessDeniedException.class, () -> validateData
                 .validateUserWithPassword("nonexistent@email.com", "anyPassword"));
+    }
+
+    @Test
+    void testIsUserAdminWithAdminRole() {
+        Set<RoleEntity> roles = new HashSet<>();
+        RoleEntity adminRole = new RoleEntity();
+        adminRole.setName(ADMIN_CONSTANT);
+        roles.add(adminRole);
+
+        assertTrue(validateData.isUserAdmin(roles));
+    }
+
+    @Test
+    void testIsUserAdminWithoutAdminRole() {
+        Set<RoleEntity> roles = new HashSet<>();
+        RoleEntity userRole = new RoleEntity();
+        userRole.setName("USER_ROLE");
+        roles.add(userRole);
+
+        assertFalse(validateData.isUserAdmin(roles));
+    }
+
+    @Test
+    void testIsUserAdminWithEmptyRoles() {
+        Set<RoleEntity> roles = new HashSet<>();
+
+        assertFalse(validateData.isUserAdmin(roles));
     }
 }

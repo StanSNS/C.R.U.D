@@ -113,12 +113,13 @@ public class AuthService {
 
         authResponseDTO.setEmail(loginDto.getEmail());
         authResponseDTO.setPassword(loginDto.getPassword());
+
         authResponseDTO.setRoles(userEntity
                 .getRoles()
                 .stream()
-                .map(roleEntity -> modelMapper
-                        .map(roleEntity, RoleDTO.class))
+                .map(RoleEntity::getName)
                 .collect(Collectors.toSet()));
+        authResponseDTO.setFirstName(userEntity.getFirstName());
 
         if (!validationUtil.isValid(authResponseDTO)) {
             throw new DataValidationException();

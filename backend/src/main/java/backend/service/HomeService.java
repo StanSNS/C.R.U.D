@@ -2,6 +2,7 @@ package backend.service;
 
 import backend.dto.UserDetailsDTO;
 import backend.entity.UserEntity;
+import backend.exception.AccessDeniedException;
 import backend.exception.ResourceNotFoundException;
 import backend.repository.UserEntityRepository;
 import backend.util.ValidateData;
@@ -53,17 +54,28 @@ public class HomeService {
      * @throws ResourceNotFoundException If the user to be deleted is not found.
      */
     public void deleteUser(String email, String password, String userToDeleteEmail) {
-        validateData.validateUserWithPassword(email, password);
-
+        UserEntity userEntity = validateData.validateUserWithPassword(email, password);
         UserEntity userEntityToDelete = userEntityRepository.findByEmail(userToDeleteEmail);
+
         if (userEntityToDelete == null) {
             throw new ResourceNotFoundException();
+        }
+
+        if(!validateData.isUserAdmin(userEntity.getRoles()) || validateData.isUserAdmin(userEntityToDelete.getRoles())){
+            throw new AccessDeniedException();
         }
 
         userEntityRepository.delete(userEntityToDelete);
     }
 
 
+    /**
+     * Logs out the authenticated user, clearing the security context.
+     *
+     * @param email    The email of the user requesting logout.
+     * @param password The password of the user requesting logout.
+     * @throws AccessDeniedException      If the provided credentials are invalid.
+     */
     public void logoutUser(String email, String password) {
         validateData.validateUserWithPassword(email,password);
         SecurityContextHolder.clearContext();

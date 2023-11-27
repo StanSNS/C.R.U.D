@@ -8,7 +8,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -61,6 +63,14 @@ public class HomeControllerTest {
     }
 
 
+    @Test
+    void testLogoutUser() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.post("/home")
+                        .param("email", "test@email.com")
+                        .param("password", "testPassword"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
 
+        verify(homeService, times(1)).logoutUser("test@email.com", "testPassword");
+    }
 
 }

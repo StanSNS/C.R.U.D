@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import "./Home.css"
 import {useNavigate} from "react-router-dom";
 import {deleteUser, getAllUsers, logoutUser} from "../../service/HomeService";
-import {loggedUserEmail, loggedUserPassword} from "../../service/AuthService";
+import {isAdministrator, loggedUserEmail, loggedUserFirstName, loggedUserPassword} from "../../service/AuthService";
 import {FaTrashAlt} from "react-icons/fa";
 import {Button, Modal} from "react-bootstrap";
 
@@ -10,18 +10,18 @@ export default function Home() {
 
     const navigator = useNavigate(); // Import the useNavigate hook from the 'react-router-dom' library.
     const [users, setUsers] = useState([]); // State hook to manage the 'users' state variable and 'setUsers' function to update it.
+    const [showModal, setShowModal] = useState(false); // State variable to control the visibility of a modal
+    const [userToDelete, setUserToDelete] = useState(null); // State variable to store information about the user to be deleted
 
-    const [showModal, setShowModal] = useState(false);
-    const [userToDelete, setUserToDelete] = useState(null);
 
 
     // Function that handles the logout button click event.
     const handleLogoutButton = () => {
-        logoutUser(loggedUserEmail(),loggedUserPassword())
+        logoutUser(loggedUserEmail(), loggedUserPassword())
             .then(() => {
+                navigator("/");
                 localStorage.clear()
                 sessionStorage.clear()
-                navigator("/");
             })
             .catch((error) => {
                 console.error("Error fetching user data: ", error);
@@ -76,9 +76,17 @@ export default function Home() {
 
     return (
         <>
-            <div className="text-right">
-                <button className="customLogoutButton mr-2" onClick={handleLogoutButton}><span className="customTextSize">Logout</span></button>
+            <div className="d-flex justify-content-between">
+                <div className="text-left font-weight-bolder ml-3 mt-1 ">
+                    <h2>Hello, {loggedUserFirstName()}</h2>
+                </div>
+
+                <div className="text-right">
+                    <button className="customLogoutButton mr-2" onClick={handleLogoutButton}><span
+                        className="customTextSize">Logout</span></button>
+                </div>
             </div>
+
 
             <div className="container">
                 <div className="row">
@@ -184,9 +192,11 @@ export default function Home() {
                                                 className="orangeWordColor">private</span> String <span
                                                 className="pinkWordColor">city</span>;
 
-                                                <button className="customBin" onClick={() => handleDeleteUser(user)}>
-                                                    <FaTrashAlt/>
-                                                </button>
+                                                {isAdministrator() && !user.roles.some(role => role.name === "ADMIN") &&
+                                                    <button className="customBin"
+                                                            onClick={() => handleDeleteUser(user)}><FaTrashAlt/>
+                                                    </button>
+                                                }
                                             </p>
 
                                             <p className="reduceFontSize ml-1 mb-2 ">{'}'}</p>
@@ -199,7 +209,6 @@ export default function Home() {
                     ))}
                 </div>
             </div>
-
             <Modal show={showModal} onHide={closeModal}>
                 <Modal.Header>
                     <Modal.Title>Confirmation</Modal.Title>

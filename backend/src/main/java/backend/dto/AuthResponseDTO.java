@@ -17,6 +17,9 @@ public class AuthResponseDTO {
     private String password;
 
     @NotNull
-    private Set<RoleDTO> roles;
+    private Set<String> roles;
+
+    @NotNull
+    private String firstName;
 
 }

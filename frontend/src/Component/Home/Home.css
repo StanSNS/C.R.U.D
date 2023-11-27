@@ -84,11 +84,12 @@
 .customLogoutButton{
     background: none;
     border: none;
-    padding-left: 15px;
-    padding-top: 15px;
     font-weight: bold;
 }
 
 .customTextSize{
     font-size: 30px;
 }
+
+
+

@@ -70,7 +70,6 @@ public class HomeController {
      * @param password Password for authentication.
      * @return A ResponseEntity with a status code 200 if the logout is successful, or an error response if the operation fails.
      */
-//    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PostMapping
     public ResponseEntity<?> logoutUser(@RequestParam String email, @RequestParam String password) {
         homeService.logoutUser(email,password);

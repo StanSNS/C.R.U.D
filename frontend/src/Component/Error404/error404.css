@@ -1,0 +1,29 @@
+.error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50vh;
+    font-size: 30px;
+}
+.error-content {
+    text-align: center;
+}
+.text-danger {
+    color: red;
+}
+.btn-box-error {
+    border: 2px solid deepskyblue;
+    border-radius: 15px;
+    padding: 5px 6px 9px 7px;
+    color: white;
+    background-color: deepskyblue;
+    font-weight: bold;
+}
+.btn-box-error:hover {
+    border: 4px solid deepskyblue;
+    border-radius: 20px;
+    text-decoration: none;
+    color: deepskyblue;
+    background-color: white;
+    font-weight: bold;
+}

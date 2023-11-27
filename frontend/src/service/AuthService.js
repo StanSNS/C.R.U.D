@@ -30,10 +30,20 @@ const decryptData = (data) => {
 }
 
 // Save user information securely in session storage.
-export const saveLoggedUser = (email, password, roles) => {
+export const saveLoggedUser = (email, password, roles, firstName) => {
     sessionStorage.setItem("Email", encryptData(email));
     sessionStorage.setItem("Password", encryptData(password));
     sessionStorage.setItem("Roles", encryptData(roles));
+    sessionStorage.setItem("First Name", encryptData(firstName));
+}
+
+
+// Function to retrieve the logged-in user's first name from session storage and decrypt it.
+export const loggedUserFirstName = () => {
+    const name = sessionStorage.getItem("First Name");
+    if (name) {
+        return decryptData(name);
+    }
 }
 
 // Function to retrieve the logged-in user's email from session storage and decrypt it.
@@ -50,5 +60,27 @@ export const loggedUserPassword = () => {
     if (password) {
         return decryptData(password);
     }
+}
+
+
+// Function to check if the logged-in user is an administrator based on their role.
+export const isAdministrator = () => {
+    let roles = sessionStorage.getItem("Roles");
+
+    if (roles) {
+        roles = decryptData(roles);
+        if (roles.includes("ADMIN")) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Function to check if a user is logged in based on session storage.
+export const isUserLoggedIn = () => {
+    return sessionStorage.getItem("Email") != null
+        && sessionStorage.getItem("Roles")
+        && sessionStorage.getItem("First Name")
+        && sessionStorage.getItem("Password");
 }
 

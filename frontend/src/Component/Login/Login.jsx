@@ -38,7 +38,8 @@ export default function Login() {
                             const email = response.data.email;
                             const password = response.data.password;
                             const roles = response.data.roles;
-                            saveLoggedUser(email,password,roles)
+                            const firstName = response.data.firstName;
+                            saveLoggedUser(email,password,roles,firstName)
                             navigator("/home")
                         }
                     })

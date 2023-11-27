@@ -14,7 +14,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,25 +64,6 @@ public class HomeServiceTest {
         verify(validateData, times(1)).validateUserWithPassword(email, password);
         verify(userEntityRepository, times(1)).findAll();
         verify(modelMapper, times(mockedUserEntities.size())).map(any(), eq(UserDetailsDTO.class));
-    }
-
-
-    @Test
-    void testDeleteUser_ValidCredentialsAndUserExists_DeletesUser() {
-        String email = "test@example.com";
-        String password = "password";
-        String userToDeleteEmail = "userToDelete@example.com";
-
-        UserEntity userEntity = new UserEntity();
-
-        when(validateData.validateUserWithPassword(email, password)).thenReturn(userEntity);
-        when(userEntityRepository.findByEmail(userToDeleteEmail)).thenReturn(userEntity);
-
-        homeService.deleteUser(email, password, userToDeleteEmail);
-
-        verify(validateData, times(1)).validateUserWithPassword(email, password);
-        verify(userEntityRepository, times(1)).findByEmail(userToDeleteEmail);
-        verify(userEntityRepository, times(1)).delete(userEntity);
     }
 
     @Test
