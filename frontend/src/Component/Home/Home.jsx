@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import "./Home.css"
 import {useNavigate} from "react-router-dom";
-import {deleteUser, getAllUsers} from "../../service/HomeService";
+import {deleteUser, getAllUsers, logoutUser} from "../../service/HomeService";
 import {loggedUserEmail, loggedUserPassword} from "../../service/AuthService";
 import {FaTrashAlt} from "react-icons/fa";
 import {Button, Modal} from "react-bootstrap";
@@ -15,9 +15,18 @@ export default function Home() {
     const [userToDelete, setUserToDelete] = useState(null);
 
 
-    // Function that handles the home button click event.
-    const handleHomeButton = () => {
-        navigator("/");
+    // Function that handles the logout button click event.
+    const handleLogoutButton = () => {
+        logoutUser(loggedUserEmail(),loggedUserPassword())
+            .then(() => {
+                localStorage.clear()
+                sessionStorage.clear()
+                navigator("/");
+            })
+            .catch((error) => {
+                console.error("Error fetching user data: ", error);
+            });
+
     };
 
     // Effect hook to fetch all users when the component mounts.
@@ -57,7 +66,6 @@ export default function Home() {
                     .catch((error) => {
                         console.error("Error fetching user data: ", error);
                     });
-
             })
             .catch((error) => {
                 console.error("Error deleting user: ", error);
@@ -68,10 +76,12 @@ export default function Home() {
 
     return (
         <>
-            <button className="customHomeButton pulses" onClick={handleHomeButton}>C.R.U.D.</button>
+            <div className="text-right">
+                <button className="customLogoutButton mr-2" onClick={handleLogoutButton}><span className="customTextSize">Logout</span></button>
+            </div>
+
             <div className="container">
                 <div className="row">
-
                     {users.map((user, index) => (
                         <div className={`col-${12 / Math.min(users.length, 3)} mb-4`} key={index}>
                             <div className="flip-card mr-5">

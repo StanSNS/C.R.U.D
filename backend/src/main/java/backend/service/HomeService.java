@@ -7,6 +7,7 @@ import backend.repository.UserEntityRepository;
 import backend.util.ValidateData;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -63,4 +64,8 @@ public class HomeService {
     }
 
 
+    public void logoutUser(String email, String password) {
+        validateData.validateUserWithPassword(email,password);
+        SecurityContextHolder.clearContext();
+    }
 }

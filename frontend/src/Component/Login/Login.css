@@ -141,12 +141,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh; /* Make the container take the full height of the viewport */
+    height: 100vh;
 }
 
-.form {
-    /* Your existing styles */
-}
 
 .customHomeButton {
     background: none;
@@ -154,5 +151,4 @@
     padding-left: 15px;
     padding-top: 15px;
     font-weight: bold;
-
 }

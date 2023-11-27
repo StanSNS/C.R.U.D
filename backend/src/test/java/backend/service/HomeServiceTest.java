@@ -11,6 +11,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,5 +105,19 @@ public class HomeServiceTest {
         verify(userEntityRepository, never()).delete(any());
     }
 
+    @Test
+    void testLogoutUser_ValidCredentials_LogsOutUser() {
+        String email = "test@example.com";
+        String password = "password";
+
+        when(validateData.validateUserWithPassword(email, password)).thenReturn(new UserEntity());
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        SecurityContextHolder.setContext(securityContext);
+
+        homeService.logoutUser(email, password);
+
+        verify(validateData, times(1)).validateUserWithPassword(email, password);
+    }
 
 }

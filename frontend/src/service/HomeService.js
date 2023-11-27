@@ -24,9 +24,15 @@ export const deleteUser = (email, password, userToDeleteEmail) => {
             if (response.status === 200) {
                 return response.data;
             } else {
-                throw new Error('Failed to get all users!');
+                throw new Error('Failed to delete User');
             }
         }).catch((error) => {
             throw error;
         });
+};
+
+// Function to log out a user.
+export const logoutUser = (email, password) => {
+    const url = `http://localhost:8000/home?email=${email}&password=${password}`
+    return axios.post(url)
 };

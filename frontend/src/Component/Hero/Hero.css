@@ -20,10 +20,6 @@ body, html {
     animation: pulse 2s infinite;
 }
 
-
-
-
-
 .loginButton {
     position: relative;
     overflow: hidden;

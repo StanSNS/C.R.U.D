@@ -6,6 +6,7 @@ import backend.service.HomeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,7 +16,7 @@ import static backend.constants.URLAccessConst.FRONTEND_BASE_URL;
 @CrossOrigin(FRONTEND_BASE_URL)
 @RequiredArgsConstructor
 @RestController
-@RequestMapping
+@RequestMapping("/home")
 public class HomeController {
 
 
@@ -36,7 +37,7 @@ public class HomeController {
      * @return ResponseEntity<List < UserDetailsDTO>> A response entity containing a list of UserDetailsDTO objects representing user details.
      * @apiNote This endpoint is designed to be used for fetching user details by providing valid email and password credentials.
      */
-    @GetMapping("/home")
+    @GetMapping
     public ResponseEntity<List<UserDetailsDTO>> getAllUsers(@RequestParam String email, @RequestParam String password) {
         return new ResponseEntity<>(homeService.getAllUsers(email, password), HttpStatus.OK);
     }
@@ -48,16 +49,31 @@ public class HomeController {
      * This endpoint is mapped to "/home" using the HTTP PUT method. It requires three
      * request parameters, "email", "password", and "userToDeleteEmail", to authenticate and delete a user.
      *
-     * @param email               The email of the user for authentication.
-     * @param password            The password of the user for authentication.
-     * @param userToDeleteEmail   The email of the user to be deleted.
+     * @param email             The email of the user for authentication.
+     * @param password          The password of the user for authentication.
+     * @param userToDeleteEmail The email of the user to be deleted.
      * @return ResponseEntity<?> A response entity with no content and a status of HttpStatus.OK if the user deletion is successful.
      * @apiNote This endpoint is designed to be used for deleting a user by providing valid email and password credentials,
      * and the email of the user to be deleted.
      */
-    @PutMapping("/home")
+    @PutMapping
     public ResponseEntity<?> getAllUsers(@RequestParam String email, @RequestParam String password, @RequestParam String userToDeleteEmail) {
         homeService.deleteUser(email, password, userToDeleteEmail);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
+    /**
+     * Logs the user out.
+     *
+     * @param email    Email of the user.
+     * @param password Password for authentication.
+     * @return A ResponseEntity with a status code 200 if the logout is successful, or an error response if the operation fails.
+     */
+//    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @PostMapping
+    public ResponseEntity<?> logoutUser(@RequestParam String email, @RequestParam String password) {
+        homeService.logoutUser(email,password);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
