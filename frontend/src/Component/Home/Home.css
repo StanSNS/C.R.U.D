@@ -73,7 +73,7 @@
     color: #fff200;
 }
 
-.customBin{
+.customBin {
     scale: 1.5;
     margin-left: 48%;
     border: none;
@@ -81,15 +81,55 @@
     color: #dc1c1c;
 }
 
-.customLogoutButton{
+.customLogoutButton {
     background: none;
     border: none;
     font-weight: bold;
 }
 
-.customTextSize{
+.customTextSize {
     font-size: 30px;
 }
 
+.sortingButton {
+    color: #39393AFF;
+    text-decoration: none;
+    border: 3px solid #39393AFF;
+    padding: 10px 20px;
+    font-size: 17px;
+    font-weight: bold;
+    background: transparent;
+    position: relative;
+    transition: all 1s;
+    overflow: hidden;
+    border-radius: 20px;
+}
 
+.sortingButton:hover {
+    color: white;
+}
+
+.sortingButton::before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 0;
+    top: 0;
+    left: -40px;
+    transform: skewX(45deg);
+    background: rgb(57, 57, 58);
+    background: linear-gradient(90deg, rgba(57, 57, 58, 1) 30%, rgba(253, 178, 137, 1) 100%);
+    z-index: -1;
+    transition: all 1s;
+}
+
+.sortingButton:hover::before {
+    width: 160%;
+}
+
+.customEditButton {
+    border: none;
+    background: none;
+    color: deepskyblue;
+}
 
