@@ -1,17 +1,21 @@
 package backend.service;
 
 import backend.dto.UserDetailsDTO;
+import backend.entity.Base.BaseEntity;
 import backend.entity.UserEntity;
 import backend.exception.AccessDeniedException;
+import backend.exception.DataValidationException;
 import backend.exception.ResourceNotFoundException;
 import backend.repository.UserEntityRepository;
 import backend.util.ValidateData;
+import backend.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,24 +28,116 @@ public class HomeService {
     private final ValidateData validateData;
     private final UserEntityRepository userEntityRepository;
     private final ModelMapper modelMapper;
+    private final ValidationUtil validationUtil;
 
 
     /**
-     * Retrieves a list of all users.
+     * Retrieves all users by default.
      *
-     * @param email    The email of the requesting user.
-     * @param password The password of the requesting user.
-     * @return A list of UserDetailsDTO representing all users.
+     * @param email    Email of the user for authentication.
+     * @param password Password of the user for authentication.
+     * @return List<UserDetailsDTO> A list of UserDetailsDTO representing all users.
      */
-    public List<UserDetailsDTO> getAllUsers(String email, String password) {
+    public List<UserDetailsDTO> getAllUsersByDefault(String email, String password) {
         validateData.validateUserWithPassword(email, password);
 
         return userEntityRepository
                 .findAll()
                 .stream()
-                .map(user -> modelMapper
-                        .map(user, UserDetailsDTO.class))
+                .map(user -> {
+                    UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
+                    if (!validationUtil.isValid(userDetailsDTO)) {
+                        throw new DataValidationException();
+                    }
+                    return userDetailsDTO;
+                })
                 .collect(Collectors.toList());
+    }
+
+
+    /**
+     * Retrieves all users ordered by last name and date of birth.
+     *
+     * @param email    Email of the user for authentication.
+     * @param password Password of the user for authentication.
+     * @return List<UserDetailsDTO> A list of UserDetailsDTO representing all users ordered by last name and date of birth.
+     */
+    public List<UserDetailsDTO> getAllUsersOrderedByLastNameAndDateOfBirth(String email, String password) {
+        validateData.validateUserWithPassword(email, password);
+
+        return userEntityRepository
+                .findAllUsersOrderedByLastNameAndDateOfBirth()
+                .stream()
+                .map(user -> {
+                    UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
+                    if (!validationUtil.isValid(userDetailsDTO)) {
+                        throw new DataValidationException();
+                    }
+                    return userDetailsDTO;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * Retrieves a random user.
+     *
+     * @param email    Email of the user for authentication.
+     * @param password Password of the user for authentication.
+     * @return List<UserDetailsDTO> A list containing a single UserDetailsDTO representing a randomly selected user.
+     * @throws ResourceNotFoundException if no users are available.
+     */
+    public List<UserDetailsDTO> getRandomUser(String email, String password) {
+        validateData.validateUserWithPassword(email, password);
+
+        List<Long> userIDs = userEntityRepository.findAll().stream().map(BaseEntity::getId).toList();
+
+        int lowerBound = 1;
+        int upperBound = userIDs.size();
+
+        if (upperBound < lowerBound) {
+            throw new ResourceNotFoundException();
+        }
+
+        int randomNumber = new Random().nextInt(upperBound - lowerBound + 1) + lowerBound;
+        Long randomUserID = userIDs.get(randomNumber - 1);
+
+        return userEntityRepository
+                .findById(randomUserID)
+                .stream()
+                .map(user -> {
+                    UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
+                    if (!validationUtil.isValid(userDetailsDTO)) {
+                        throw new DataValidationException();
+                    }
+                    return userDetailsDTO;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * Retrieves all users with a given last name.
+     *
+     * @param email          Email of the user for authentication.
+     * @param password       Password of the user for authentication.
+     * @param lastNameSearch Last name to search for.
+     * @return List<UserDetailsDTO> A list of UserDetailsDTO representing users with the specified last name.
+     */
+    public List<UserDetailsDTO> getAllUsersSortedByLastName(String email, String password, String lastNameSearch) {
+        validateData.validateUserWithPassword(email, password);
+
+        return userEntityRepository
+                .findAllByLastName(lastNameSearch)
+                .stream()
+                .map(user -> {
+                            UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
+                            if (!validationUtil.isValid(userDetailsDTO)) {
+                                throw new DataValidationException();
+                            }
+                            return userDetailsDTO;
+                        }
+                ).collect(Collectors.toList());
     }
 
 
@@ -93,7 +189,9 @@ public class HomeService {
      */
     public void changePhoneNumber(String email, String password, String emailUserToChange, String phoneNumber) {
         validateData.validateUserWithPassword(email, password);
+
         UserEntity userEntity = userEntityRepository.findByEmail(emailUserToChange);
+
         if (userEntity == null) {
             throw new ResourceNotFoundException();
         }

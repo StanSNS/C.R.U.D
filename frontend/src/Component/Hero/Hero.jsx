@@ -4,8 +4,7 @@ import {useNavigate} from 'react-router-dom'
 
 export default function Hero() {
 
-    // Import the useNavigate hook from the 'react-router-dom' library.
-    const navigator = useNavigate();
+    const navigator = useNavigate(); // Import the useNavigate hook from the 'react-router-dom' library.
 
     // Function that handles the login button click event.
     const handleLoginButton = () => {

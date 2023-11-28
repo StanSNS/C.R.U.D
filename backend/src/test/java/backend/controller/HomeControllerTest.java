@@ -1,6 +1,7 @@
 package backend.controller;
 
 import backend.dto.UserDetailsDTO;
+import backend.exception.MissingParameterException;
 import backend.service.HomeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,9 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -18,6 +17,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Collections;
 
+import static backend.constants.ActionConst.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -38,18 +38,56 @@ public class HomeControllerTest {
     }
 
     @Test
-    void testGetAllUsers() throws Exception {
-        UserDetailsDTO userDto = new UserDetailsDTO();
-        when(homeService.getAllUsers(anyString(), anyString())).thenReturn(Collections.singletonList(userDto));
+    void testSortUsers() throws Exception {
+        when(homeService.getAllUsersByDefault(anyString(), anyString()))
+                .thenReturn(Collections.singletonList(new UserDetailsDTO()));
+        when(homeService.getAllUsersOrderedByLastNameAndDateOfBirth(anyString(), anyString()))
+                .thenReturn(Collections.singletonList(new UserDetailsDTO()));
+        when(homeService.getAllUsersSortedByLastName(anyString(), anyString(), anyString()))
+                .thenReturn(Collections.singletonList(new UserDetailsDTO()));
+        when(homeService.getRandomUser(anyString(), anyString()))
+                .thenReturn(Collections.singletonList(new UserDetailsDTO()));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/home")
+                        .param("action", ALL_USERS_DEFAULT)
                         .param("email", "test@email.com")
                         .param("password", "testPassword"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
-        verify(homeService, times(1)).getAllUsers("test@email.com", "testPassword");
-    }
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
 
+        mockMvc.perform(MockMvcRequestBuilders.get("/home")
+                        .param("action", ALL_USERS_SORT_BY_LAST_NAME_AND_DOB)
+                        .param("email", "test@email.com")
+                        .param("password", "testPassword"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/home")
+                        .param("action", ALL_USERS_FOUND_BY_LAST_NAME)
+                        .param("email", "test@email.com")
+                        .param("password", "testPassword")
+                        .param("lastNameSearch", "LastName"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/home")
+                        .param("action", ONE_RANDOM_USER)
+                        .param("email", "test@email.com")
+                        .param("password", "testPassword"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/home")
+                        .param("action", "UNKNOWN_ACTION")
+                        .param("email", "test@email.com")
+                        .param("password", "testPassword"))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+        verify(homeService, times(1)).getAllUsersByDefault(anyString(), anyString());
+        verify(homeService, times(1)).getAllUsersOrderedByLastNameAndDateOfBirth(anyString(), anyString());
+        verify(homeService, times(1)).getAllUsersSortedByLastName(anyString(), anyString(), anyString());
+        verify(homeService, times(1)).getRandomUser(anyString(), anyString());
+    }
 
     @Test
     void testDeleteUser() throws Exception {

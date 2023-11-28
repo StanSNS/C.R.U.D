@@ -2,6 +2,7 @@ package backend.controller;
 
 
 import backend.dto.UserDetailsDTO;
+import backend.exception.MissingParameterException;
 import backend.service.HomeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static backend.constants.ActionConst.*;
 import static backend.constants.URLAccessConst.FRONTEND_BASE_URL;
 
 @CrossOrigin(FRONTEND_BASE_URL)
@@ -26,19 +28,28 @@ public class HomeController {
 
 
     /**
-     * Retrieves a list of user details based on the provided email and password.
-     * <p>
-     * This endpoint is mapped to "/home" using the HTTP GET method. It requires two
-     * request parameters, "email" and "password", to authenticate and fetch user details.
+     * Sorts and retrieves users based on the specified action.
      *
-     * @param email    The email of the user for authentication.
-     * @param password The password of the user for authentication.
-     * @return ResponseEntity<List < UserDetailsDTO>> A response entity containing a list of UserDetailsDTO objects representing user details.
-     * @apiNote This endpoint is designed to be used for fetching user details by providing valid email and password credentials.
+     * @param action           The action to be performed. Possible values: ALL_USERS_DEFAULT, ALL_USERS_SORT_BY_LAST_NAME_AND_DOB,
+     *                         ALL_USERS_FOUND_BY_LAST_NAME, ONE_RANDOM_USER.
+     * @param email            Email of the user for authentication.
+     * @param password         Password of the user for authentication.
+     * @param lastNameSearch   Last name for searching (required only for ALL_USERS_FOUND_BY_LAST_NAME action).
+     * @return ResponseEntity<List<UserDetailsDTO>> A response entity with a list of user data and status OK.
+     * @throws MissingParameterException Thrown when required parameters are missing.
      */
     @GetMapping
-    public ResponseEntity<List<UserDetailsDTO>> getAllUsers(@RequestParam String email, @RequestParam String password) {
-        return new ResponseEntity<>(homeService.getAllUsers(email, password), HttpStatus.OK);
+    public ResponseEntity<List<UserDetailsDTO>> sortUsers(@RequestParam String action,
+                                                          @RequestParam String email,
+                                                          @RequestParam String password,
+                                                          @RequestParam(required = false)  String lastNameSearch) {
+        return switch (action) {
+            case ALL_USERS_DEFAULT -> new ResponseEntity<>(homeService.getAllUsersByDefault(email, password), HttpStatus.OK);
+            case ALL_USERS_SORT_BY_LAST_NAME_AND_DOB -> new ResponseEntity<>(homeService.getAllUsersOrderedByLastNameAndDateOfBirth(email,password),HttpStatus.OK);
+            case ALL_USERS_FOUND_BY_LAST_NAME -> new ResponseEntity<>(homeService.getAllUsersSortedByLastName(email,password,lastNameSearch), HttpStatus.OK);
+            case ONE_RANDOM_USER -> new ResponseEntity<>(homeService.getRandomUser(email,password),HttpStatus.OK);
+            default -> throw new MissingParameterException();
+        };
     }
 
 

@@ -3,7 +3,6 @@ package backend.util;
 import backend.entity.RoleEntity;
 import backend.entity.UserEntity;
 import backend.exception.AccessDeniedException;
-import backend.repository.RoleEntityRepository;
 import backend.repository.UserEntityRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,7 +20,6 @@ public class ValidateData {
      * initializing dependencies with lombok @RequiredArgsConstructor
      */
     private final UserEntityRepository userEntityRepository;
-    private final RoleEntityRepository roleEntityRepository;
     private final PasswordEncoder passwordEncoder;
 
 

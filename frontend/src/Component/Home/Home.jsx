@@ -1,10 +1,17 @@
 import React, {useEffect, useState} from "react";
 import "./Home.css"
 import {useNavigate} from "react-router-dom";
-import {changeUserPhoneNumber, deleteUser, getAllUsers, logoutUser} from "../../service/HomeService";
+import {
+    changeUserPhoneNumber,
+    deleteUser,
+    getAllUsersDefault, getAllUsersSearchByLastName,
+    getAllUsersSortedByLastNameAndDOB, getRandomUser,
+    logoutUser
+} from "../../service/HomeService";
 import {isAdministrator, loggedUserEmail, loggedUserFirstName, loggedUserPassword} from "../../service/AuthService";
 import {FaTrashAlt} from "react-icons/fa";
 import {Button, Modal} from "react-bootstrap";
+import {MdOutlineDangerous} from "react-icons/md";
 
 export default function Home() {
 
@@ -37,7 +44,7 @@ export default function Home() {
 
     // Effect hook to fetch all users when the component mounts.
     useEffect(() => {
-        getAllUsers(loggedUserEmail(), loggedUserPassword())
+        getAllUsersDefault(loggedUserEmail(), loggedUserPassword())
             .then((data) => {
                 setUsers(data);
             })
@@ -65,7 +72,7 @@ export default function Home() {
 
                 closeModal();
 
-                getAllUsers(loggedUserEmail(), loggedUserPassword())
+                getAllUsersDefault(loggedUserEmail(), loggedUserPassword())
                     .then((data) => {
                         setUsers(data);
                     })
@@ -81,17 +88,27 @@ export default function Home() {
 
     // Handle the click event for default sorting
     const handleDefaultSort = () => {
-        // Add logic for default sorting here
-        console.log("Default Sort Clicked");
+        getAllUsersDefault(loggedUserEmail(), loggedUserPassword())
+            .then((data) => {
+                setUsers(data)
+            }).catch((error) => {
+            console.error("Error sorting users by default sorting: ", error);
+        });
     };
 
     // Handle the click event for sorting by last name and date of birth
-    const handleSortByLastName = () => {
-        console.log("Sort By Last Name and Date of Birth Clicked");
+    const handleSortByLastNameAndDOB = () => {
+        getAllUsersSortedByLastNameAndDOB(loggedUserEmail(), loggedUserPassword())
+            .then((data) => {
+                setUsers(data)
+            }).catch((error) => {
+            console.error("Error sorting users by last name and date of birth: ", error);
+        });
     };
 
     // Show the search modal when the "Search by Last Name" button is clicked
     const handleSearchByLastName = () => {
+        setSearchTerm("")
         setShowSearchModal(true);
     };
 
@@ -112,8 +129,13 @@ export default function Home() {
             setSearchError("Please enter a last name!");
         } else {
             setSearchError("");
-
-            console.log("Search by Last Name Confirmed:", searchTerm);
+            getAllUsersSearchByLastName(loggedUserEmail(), loggedUserPassword(), searchTerm)
+                .then((data) => {
+                    setUsers(data)
+                    setSearchTerm("")
+                }).catch((error) => {
+                console.error("Error getting users by last name: ", error);
+            });
             setShowSearchModal(false);
         }
     };
@@ -157,7 +179,12 @@ export default function Home() {
 
     // Handle the click event for getting a random user
     const handleGetRandomUser = () => {
-        console.log("Get Random User Clicked");
+        getRandomUser(loggedUserEmail(), loggedUserPassword())
+            .then((data) => {
+                setUsers(data)
+            }).catch((error) => {
+            console.error("Error getting random user: ", error);
+        });
     };
 
     return (
@@ -175,7 +202,7 @@ export default function Home() {
                     </button>
 
                     <button className="sortingButton ml-3 mr-3 "
-                            onClick={handleSortByLastName}>
+                            onClick={handleSortByLastNameAndDOB}>
 
                         Sort By Last Name and Date of Birth
                     </button>
@@ -197,9 +224,14 @@ export default function Home() {
                 </div>
             </div>
 
-
             <div className="container">
                 <div className="row">
+                    {users.length === 0 && (
+                        <div className="text-center">
+                            <div className="errorIcon mb-5"><MdOutlineDangerous/></div>
+                            <h1 className="font-weight-bolder customStyleErrorMSG">No users were found!</h1>
+                        </div>
+                    )}
                     {users.map((user, index) => (
                         <div className={`col-${12 / Math.min(users.length, 3)} mb-4`} key={index}>
                             <div className="flip-card mr-5">

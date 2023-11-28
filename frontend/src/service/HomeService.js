@@ -1,9 +1,8 @@
 import axios from "axios";
 
-
-// Function to fetch all users from the server using the provided email and password.
-export const getAllUsers = (email, password) => {
-    const url = `http://localhost:8000/home?email=${email}&password=${password}`;
+// Fetch all users ordered by default criteria (unspecified) using email and password for authorization
+export const getAllUsersDefault = (email, password) => {
+    const url = `http://localhost:8000/home?action=getAllUsersOrderedByDefault&email=${email}&password=${password}`;
     return axios.get(url).then((response) => {
         if (response.status === 200) {
             return response.data;
@@ -15,6 +14,47 @@ export const getAllUsers = (email, password) => {
     });
 };
 
+// Fetch all users sorted by last name and date of birth using email and password for authorization
+export const getAllUsersSortedByLastNameAndDOB = (email, password) => {
+    const url = `http://localhost:8000/home?action=getAllUsersSortedByLastNameAndDateOfBirth&email=${email}&password=${password}`;
+    return axios.get(url).then((response) => {
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error('Failed to get sorted users by last name and DOB!');
+        }
+    }).catch((error) => {
+        throw error;
+    })
+}
+
+// Fetch all users found by last name using email and password for authorization, and a search string
+export const getAllUsersSearchByLastName = (email, password, lastNameSearch) => {
+    const url = `http://localhost:8000/home?action=getAllUsersFoundByLastName&email=${email}&password=${password}&lastNameSearch=${lastNameSearch}`;
+    return axios.get(url).then((response) => {
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error('Failed to get sorted users by last name!');
+        }
+    }).catch((error) => {
+        throw error;
+    })
+}
+
+// Fetch a random user using email and password for authorization
+export const getRandomUser = (email, password) => {
+    const url = `http://localhost:8000/home?action=getRandomUser&email=${email}&password=${password}`;
+    return axios.get(url).then((response) => {
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error('Failed to get random User!');
+        }
+    }).catch((error) => {
+        throw error;
+    })
+}
 
 // Deletes a user based on the provided email and password.
 export const deleteUser = (email, password, userToDeleteEmail) => {

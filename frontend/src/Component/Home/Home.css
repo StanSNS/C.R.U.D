@@ -133,3 +133,11 @@
     color: deepskyblue;
 }
 
+.customStyleErrorMSG {
+    color: red;
+}
+
+.errorIcon{
+    color: red;
+    scale: 5;
+}
