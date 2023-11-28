@@ -6,7 +6,6 @@ import backend.service.HomeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -72,7 +71,28 @@ public class HomeController {
      */
     @PostMapping
     public ResponseEntity<?> logoutUser(@RequestParam String email, @RequestParam String password) {
-        homeService.logoutUser(email,password);
+        homeService.logoutUser(email, password);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
+    /**
+     * Changes the phone number of a user.
+     *
+     * @param email               The email of the user initiating the change.
+     * @param password            The password of the user initiating the change.
+     * @param emailUserToChange   The email of the user whose phone number is to be changed.
+     * @param phoneNumberToChange The new phone number to be set for the user.
+     * @return A ResponseEntity with a status code 200 if the phone number change is successful, or an error response if the operation fails.
+     */
+    @PatchMapping
+    public ResponseEntity<?> changePhoneNumber(@RequestParam String email,
+                                               @RequestParam String password,
+                                               @RequestParam String emailUserToChange,
+                                               @RequestParam String phoneNumberToChange) {
+
+        homeService.changePhoneNumber(email, password, emailUserToChange, phoneNumberToChange);
+        return new ResponseEntity<>(HttpStatus.OK);
+
     }
 }

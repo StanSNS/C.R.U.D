@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import "./Home.css"
 import {useNavigate} from "react-router-dom";
-import {deleteUser, getAllUsers, logoutUser} from "../../service/HomeService";
+import {changeUserPhoneNumber, deleteUser, getAllUsers, logoutUser} from "../../service/HomeService";
 import {isAdministrator, loggedUserEmail, loggedUserFirstName, loggedUserPassword} from "../../service/AuthService";
 import {FaTrashAlt} from "react-icons/fa";
 import {Button, Modal} from "react-bootstrap";
@@ -138,11 +138,20 @@ export default function Home() {
         if (newPhoneNumber.trim() === "") {
             setPhoneNumberError("Please enter a phone number!");
         } else {
-            setEditedUser((prevUser) => ({
-                ...prevUser,
-                phoneNumber: newPhoneNumber,
-            }));
-            closeEditModal();
+            changeUserPhoneNumber(loggedUserEmail(), loggedUserPassword(), editedUser.email, newPhoneNumber)
+                .then(() => {
+                    setUsers((prevUsers) =>
+                        prevUsers.map((user) =>
+                            user === editedUser
+                                ? {...user, phoneNumber: newPhoneNumber}
+                                : user
+                        )
+                    );
+                    closeEditModal();
+                }).catch((error) => {
+                setPhoneNumberError("An error occurred !");
+                console.error("Error changing user phone number: ", error);
+            });
         }
     };
 

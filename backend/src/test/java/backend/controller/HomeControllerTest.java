@@ -59,7 +59,10 @@ public class HomeControllerTest {
                         .param("userToDeleteEmail", "userToDelete@email.com"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        verify(homeService, times(1)).deleteUser("test@email.com", "testPassword", "userToDelete@email.com");
+        verify(homeService, times(1))
+                .deleteUser("test@email.com",
+                        "testPassword",
+                        "userToDelete@email.com");
     }
 
 
@@ -73,4 +76,19 @@ public class HomeControllerTest {
         verify(homeService, times(1)).logoutUser("test@email.com", "testPassword");
     }
 
+    @Test
+    void testChangePhoneNumber() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.patch("/home")
+                        .param("email", "test@email.com")
+                        .param("password", "testPassword")
+                        .param("emailUserToChange", "userToChange@email.com")
+                        .param("phoneNumberToChange", "newPhoneNumber"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        verify(homeService, times(1))
+                .changePhoneNumber("test@email.com",
+                        "testPassword",
+                        "userToChange@email.com",
+                        "newPhoneNumber");
+    }
 }

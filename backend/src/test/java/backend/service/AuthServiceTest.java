@@ -198,5 +198,4 @@ public class AuthServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> authService.login(loginDTO));
     }
 
-
 }

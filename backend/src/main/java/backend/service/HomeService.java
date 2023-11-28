@@ -48,9 +48,9 @@ public class HomeService {
     /**
      * Deletes a user based on the provided email.
      *
-     * @param email               The email of the requesting user.
-     * @param password            The password of the requesting user.
-     * @param userToDeleteEmail   The email of the user to be deleted.
+     * @param email             The email of the requesting user.
+     * @param password          The password of the requesting user.
+     * @param userToDeleteEmail The email of the user to be deleted.
      * @throws ResourceNotFoundException If the user to be deleted is not found.
      */
     public void deleteUser(String email, String password, String userToDeleteEmail) {
@@ -61,7 +61,7 @@ public class HomeService {
             throw new ResourceNotFoundException();
         }
 
-        if(!validateData.isUserAdmin(userEntity.getRoles()) || validateData.isUserAdmin(userEntityToDelete.getRoles())){
+        if (!validateData.isUserAdmin(userEntity.getRoles()) || validateData.isUserAdmin(userEntityToDelete.getRoles())) {
             throw new AccessDeniedException();
         }
 
@@ -74,10 +74,30 @@ public class HomeService {
      *
      * @param email    The email of the user requesting logout.
      * @param password The password of the user requesting logout.
-     * @throws AccessDeniedException      If the provided credentials are invalid.
+     * @throws AccessDeniedException If the provided credentials are invalid.
      */
     public void logoutUser(String email, String password) {
-        validateData.validateUserWithPassword(email,password);
+        validateData.validateUserWithPassword(email, password);
         SecurityContextHolder.clearContext();
+    }
+
+
+    /**
+     * Changes the phone number of a user.
+     *
+     * @param email             The email of the user initiating the change.
+     * @param password          The password of the user initiating the change.
+     * @param emailUserToChange The email of the user whose phone number is to be changed.
+     * @param phoneNumber       The new phone number to be set for the user.
+     * @throws ResourceNotFoundException If the user with the specified emailUserToChange is not found.
+     */
+    public void changePhoneNumber(String email, String password, String emailUserToChange, String phoneNumber) {
+        validateData.validateUserWithPassword(email, password);
+        UserEntity userEntity = userEntityRepository.findByEmail(emailUserToChange);
+        if (userEntity == null) {
+            throw new ResourceNotFoundException();
+        }
+        userEntity.setPhoneNumber(phoneNumber);
+        userEntityRepository.save(userEntity);
     }
 }
