@@ -59,7 +59,7 @@ export const getRandomUser = (email, password) => {
 // Deletes a user based on the provided email and password.
 export const deleteUser = (email, password, userToDeleteEmail) => {
     const url = `http://localhost:8000/home?email=${email}&password=${password}&userToDeleteEmail=${userToDeleteEmail}`;
-    return axios.put(url)
+    return axios.delete(url)
         .then((response) => {
             if (response.status === 200) {
                 return response.data;

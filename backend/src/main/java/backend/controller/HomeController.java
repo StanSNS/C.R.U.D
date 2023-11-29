@@ -56,7 +56,7 @@ public class HomeController {
     /**
      * Deletes a user based on the provided email.
      * <p>
-     * This endpoint is mapped to "/home" using the HTTP PUT method. It requires three
+     * This endpoint is mapped to "/home" using the HTTP DELETE method. It requires three
      * request parameters, "email", "password", and "userToDeleteEmail", to authenticate and delete a user.
      *
      * @param email             The email of the user for authentication.
@@ -66,8 +66,8 @@ public class HomeController {
      * @apiNote This endpoint is designed to be used for deleting a user by providing valid email and password credentials,
      * and the email of the user to be deleted.
      */
-    @PutMapping
-    public ResponseEntity<?> getAllUsers(@RequestParam String email, @RequestParam String password, @RequestParam String userToDeleteEmail) {
+    @DeleteMapping
+    public ResponseEntity<?> deleteUser(@RequestParam String email, @RequestParam String password, @RequestParam String userToDeleteEmail) {
         homeService.deleteUser(email, password, userToDeleteEmail);
         return new ResponseEntity<>(HttpStatus.OK);
     }
