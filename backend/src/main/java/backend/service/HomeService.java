@@ -1,7 +1,6 @@
 package backend.service;
 
 import backend.dto.UserDetailsDTO;
-import backend.entity.Base.BaseEntity;
 import backend.entity.UserEntity;
 import backend.exception.AccessDeniedException;
 import backend.exception.DataValidationException;
@@ -16,7 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import static backend.constants.ActionConst.*;
@@ -82,50 +80,41 @@ public class HomeService {
     }
 
 
+
     /**
-     * Retrieves a random user.
+     * Retrieves details of a selected user based on the provided email and password.
      *
-     * @param email    Email of the user for authentication.
-     * @param password Password of the user for authentication.
-     * @return List<UserDetailsDTO> A list containing a single UserDetailsDTO representing a randomly selected user.
-     * @throws ResourceNotFoundException if no users are available.
+     * @param email              The email of the user making the request.
+     * @param password           The password of the user making the request.
+     * @param selectedUserEmail  The email of the user for whom details are to be retrieved.
+     * @return UserDetailsDTO    Details of the selected user.
+     * @throws ResourceNotFoundException    If the user with the specified email is not found.
+     * @throws DataValidationException       If the retrieved user details are not valid.
      */
-    public List<UserDetailsDTO> getRandomUser(String email, String password) {
+    public UserDetailsDTO getSelectedUser(String email, String password, String selectedUserEmail) {
         validateData.validateUserWithPassword(email, password);
 
-        List<Long> userIDs = userEntityRepository.findAll().stream().map(BaseEntity::getId).toList();
-
-        int lowerBound = 1;
-        int upperBound = userIDs.size();
-
-        if (upperBound < lowerBound) {
+        UserEntity userEntity = userEntityRepository.findByEmail(selectedUserEmail);
+        if (userEntity == null) {
             throw new ResourceNotFoundException();
         }
 
-        int randomNumber = new Random().nextInt(upperBound - lowerBound + 1) + lowerBound;
-        Long randomUserID = userIDs.get(randomNumber - 1);
+        UserDetailsDTO userDetailsDTO = modelMapper.map(userEntity, UserDetailsDTO.class);
+        if (!validationUtil.isValid(userDetailsDTO)) {
+            throw new DataValidationException();
+        }
 
-        return userEntityRepository
-                .findById(randomUserID)
-                .stream()
-                .map(user -> {
-                    UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
-                    if (!validationUtil.isValid(userDetailsDTO)) {
-                        throw new DataValidationException();
-                    }
-                    return userDetailsDTO;
-                })
-                .collect(Collectors.toList());
+        return userDetailsDTO;
     }
 
 
     /**
      * Retrieves all users with a given last name.
      *
-     * @param email          Email of the user for authentication.
-     * @param password       Password of the user for authentication.
-     * @param searchTerm     The provided value from the input;
-     * @param selectedSearchOption     The selected option from the field
+     * @param email                Email of the user for authentication.
+     * @param password             Password of the user for authentication.
+     * @param searchTerm           The provided value from the input;
+     * @param selectedSearchOption The selected option from the field
      * @return List<UserDetailsDTO> A list of UserDetailsDTO representing users with the specified last name.
      */
     public List<UserDetailsDTO> getAllUsersByParameter(String email, String password, String searchTerm, String selectedSearchOption) {
@@ -159,7 +148,7 @@ public class HomeService {
                         ).collect(Collectors.toList());
             }
             case SEARCH_USERS_BY_PHONE_NUMBER -> {
-                if(searchTerm.contains("%20")){
+                if (searchTerm.contains("%20")) {
                     searchTerm = searchTerm.replace("%20", "+");
                 }
 

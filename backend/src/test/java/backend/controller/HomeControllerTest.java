@@ -43,8 +43,8 @@ public class HomeControllerTest {
                 .thenReturn(Collections.singletonList(new UserDetailsDTO()));
         when(homeService.getAllUsersByParameter(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Collections.singletonList(new UserDetailsDTO()));
-        when(homeService.getRandomUser(anyString(), anyString()))
-                .thenReturn(Collections.singletonList(new UserDetailsDTO()));
+        when(homeService.getSelectedUser(anyString(), anyString(), anyString()))
+                .thenReturn(new UserDetailsDTO());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/home")
                         .param("action", ALL_USERS_DEFAULT)
@@ -70,11 +70,12 @@ public class HomeControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/home")
-                        .param("action", ONE_RANDOM_USER)
+                        .param("action", GET_SELECTED_USER)
                         .param("email", "test@email.com")
+                        .param("selectedUserEmail", "testPassword")
                         .param("password", "testPassword"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isNotEmpty());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/home")
                         .param("action", "UNKNOWN_ACTION")
@@ -85,7 +86,7 @@ public class HomeControllerTest {
         verify(homeService, times(1)).getAllUsersByDefault(anyString(), anyString());
         verify(homeService, times(1)).getAllUsersOrderedByLastNameAndDateOfBirth(anyString(), anyString());
         verify(homeService, times(1)).getAllUsersByParameter(anyString(), anyString(), anyString(), anyString());
-        verify(homeService, times(1)).getRandomUser(anyString(), anyString());
+        verify(homeService, times(1)).getSelectedUser(anyString(), anyString(),anyString());
     }
 
     @Test

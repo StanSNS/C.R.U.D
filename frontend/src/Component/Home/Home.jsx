@@ -6,14 +6,12 @@ import {
     deleteUser,
     getAllUsersDefault,
     getAllUsersSearch,
-    getAllUsersSortedByLastNameAndDOB,
+    getAllUsersSortedByLastNameAndDOB, getSelectedUserInfo,
     logoutUser
 } from "../../service/HomeService";
 import {isAdministrator, loggedUserEmail, loggedUserFirstName, loggedUserPassword} from "../../service/AuthService";
-import {FaTrashAlt} from "react-icons/fa";
 import {Button, Modal} from "react-bootstrap";
 import {MdOutlineDangerous} from "react-icons/md";
-import {IoIosInformationCircle} from "react-icons/io";
 
 export default function Home() {
 
@@ -29,6 +27,8 @@ export default function Home() {
     const [newPhoneNumber, setNewPhoneNumber] = useState(""); // State variable to store the new phone number input in the edit user modal
     const [phoneNumberError, setPhoneNumberError] = useState(""); // New state for phone number error
     const [selectedSearchOption, setSelectedSearchOption] = useState("lastName"); // New state to store the selected option
+    const [selectedUserInfo, setSelectedUserInfo] = useState(null);// New state variable to store the selected user information for displaying in the moda
+    const [showUserInfoModal, setShowUserInfoModal] = useState(false);// New state variable to control the visibility of the user info modal
 
 
     // Function that handles the logout button click event.
@@ -109,8 +109,8 @@ export default function Home() {
         });
     };
 
-    // Show the search modal when the "Search by Last Name" button is clicked
-    const handleSearchByLastName = () => {
+    // Show the search modal when the "Search by..." button is clicked
+    const handleSearchByParameter = () => {
         setSearchTerm("")
         setShowSearchModal(true);
     };
@@ -180,6 +180,17 @@ export default function Home() {
         }
     };
 
+    // Function to handle the "Show info" button click event
+    const handleShowInfo = (user) => {
+        getSelectedUserInfo(loggedUserEmail(), loggedUserPassword(), user.email)
+            .then((data) => {
+                setSelectedUserInfo(data);
+                setShowUserInfoModal(true);
+            }).catch((error) => {
+            console.error("Error selecting user: ", error);
+        });
+    };
+
 
     return (
         <>
@@ -189,27 +200,17 @@ export default function Home() {
                 </div>
 
                 <div className="mt-2">
-                    <button className="sortingButton"
-                            onClick={handleDefaultSort}>
-                        Default Sort
+                    <button className="sortingButton" onClick={handleDefaultSort}>Default Sort</button>
+                    <button className="sortingButton ml-3 mr-3 " onClick={handleSortByLastNameAndDOB}>Sort By Last Name
+                        and Date of Birth
                     </button>
-
-                    <button className="sortingButton ml-3 mr-3 "
-                            onClick={handleSortByLastNameAndDOB}>
-                        Sort By Last Name and Date of Birth
-                    </button>
-
-
-                    <button className="sortingButton"
-                            onClick={handleSearchByLastName}>
-                        Search by...
-                    </button>
-
+                    <button className="sortingButton" onClick={handleSearchByParameter}>Search by...</button>
                 </div>
 
                 <div className="text-right">
-                    <button className="customLogoutButton mr-2" onClick={handleLogoutButton}><span
-                        className="customTextSize">Logout</span></button>
+                    <button className="customLogoutButton mr-2" onClick={handleLogoutButton}>
+                        <span className="customTextSize">Logout</span>
+                    </button>
                 </div>
             </div>
 
@@ -227,9 +228,7 @@ export default function Home() {
                                 <div className="flip-card-inner">
                                     <div className="flip-card-front">
 
-                                        <h4 className="mb-4 mt-3">
-                                            User Details:
-                                        </h4>
+                                        <h4 className="mb-4 mt-3">User Details:</h4>
 
                                         <h6 className="text-left mb-4 ml-4">
                                             <span className="orangeWordColor">First Name: </span> {user.firstName}
@@ -254,125 +253,32 @@ export default function Home() {
                                         <h6 className="text-left mb-4 ml-4">
                                             <span className="orangeWordColor">Roles: </span>
                                             {user.roles.map((role, index) => (
-                                                <span
-                                                    key={index}>{role.name}{index !== user.roles.length - 1 ? ', ' : ''}</span>))}
+                                                <span key={index}>
+                                                    {role.name}{index !== user.roles.length - 1 ? ', ' : ''}
+                                                </span>))
+                                            }
                                         </h6>
-
                                     </div>
 
                                     <div className="flip-card-back">
-                                        <div className="text-left ml-3 mt-3">
+                                        <div className="customMarginTop">
 
+                                            <button className="btn btn-warning customWidth"
+                                                    onClick={() => handleEditUser(user)}>Edit User
+                                            </button>
 
-                                            <p className="reduceFontSize mb-0 ">
-                                                <span
-                                                    className="yellowWordColor">@Entity
-                                                 </span>
+                                            <button className="btn btn-primary customWidth mt-3"
+                                                    onClick={() => handleShowInfo(user)}>
+                                                Show info
+                                            </button>
 
-                                                <span className="customInfoIcon"> <IoIosInformationCircle/></span>
-
-
-                                            </p>
-
-                                            <p className="reduceFontSize mb-0">
-                                                <span className="yellowWordColor">
-                                                    @Table
-                                                </span>
-                                                <span>(name =<span className="greenWordColor"> "users" </span>)</span>
-
-
-                                            </p>
-
-                                            <p className="reduceFontSize mb-1">
-                                                <span className="orangeWordColor">
-                                                    public class
-                                                </span> UserEntity <span>
-                                                   <span className="orangeWordColor"> extends </span>
-                                                </span> BaseEntity {"{"}
-                                            </p>
-
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">firstName</span>;
-
-                                                <button
-                                                    className="customEditButton ml-1 font-weight-bolder"
-                                                    onClick={() => handleEditUser(user)}>
-                                                    {'{EDIT}'}
+                                            {isAdministrator() && !user.roles.some(role => role.name === "ADMIN") &&
+                                                <button className="btn btn-danger customWidth mt-3"
+                                                        onClick={() => handleDeleteUser(user)}>
+                                                    Delete User
                                                 </button>
-
-                                            </p>
-
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">lastName</span>;
-
-                                                <button
-                                                    className="customEditButton ml-1 font-weight-bolder"
-                                                    onClick={() => handleEditUser(user)}>
-                                                    {'{EDIT}'}
-                                                </button>
-                                            </p>
-
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">dateOfBirth</span>;
-
-                                                <button
-                                                    className="customEditButton ml-1 font-weight-bolder"
-                                                    onClick={() => handleEditUser(user)}>
-                                                    {'{EDIT}'}
-                                                </button>
-                                            </p>
-
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">phoneNumber</span>;
-
-                                                <button
-                                                    className="customEditButton ml-1 font-weight-bolder"
-                                                    onClick={() => handleEditUser(user)}>
-                                                    {'{EDIT}'}
-                                                </button>
-                                            </p>
-
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">email</span>;
-
-                                                <button
-                                                    className="customEditButton ml-1 font-weight-bolder"
-                                                    onClick={() => handleEditUser(user)}>
-                                                    {'{EDIT}'}
-                                                </button>
-                                            </p>
-
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">password</span>;
-
-                                                <button
-                                                    className="customEditButton ml-1 font-weight-bolder"
-                                                    onClick={() => handleEditUser(user)}>
-                                                    {'{EDIT}'}
-                                                </button>
-                                            </p>
-
-
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> Set{'<RoleEntity>'} <span
-                                                className="pinkWordColor">roles</span>;
-
-                                                {isAdministrator() && !user.roles.some(role => role.name === "ADMIN") &&
-                                                    <button className="customBin"
-                                                            onClick={() => handleDeleteUser(user)}><FaTrashAlt/>
-                                                    </button>
-                                                }
-                                            </p>
-
-                                            <p className="reduceFontSize ml-1 mb-2 ">{'}'}</p>
+                                            }
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
@@ -465,6 +371,57 @@ export default function Home() {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            <Modal show={showUserInfoModal} onHide={() => setShowUserInfoModal(false)}>
+                <Modal.Header>
+                    <Modal.Title>User Information</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedUserInfo && (
+                        <>
+                            <h6>
+                                <span className="font-weight-bolder">First Name: </span>{" "}
+                                {selectedUserInfo.firstName}
+                            </h6>
+
+                            <h6>
+                                <span className="font-weight-bolder">Last Name: </span>{" "}
+                                {selectedUserInfo.lastName}
+                            </h6>
+
+                            <h6>
+                                <span className="font-weight-bolder">Date of birth: </span>{" "}
+                                {selectedUserInfo.dateOfBirth}
+                            </h6>
+
+                            <h6>
+                                <span className="font-weight-bolder">Email: </span>{" "}
+                                {selectedUserInfo.email}
+                            </h6>
+
+                            <h6>
+                                <span className="font-weight-bolder">Phone number: </span>{" "}
+                                {selectedUserInfo.phoneNumber}
+                            </h6>
+
+                            <h6>
+                                <span className="font-weight-bolder">Roles: </span>{" "}
+                                {selectedUserInfo.roles.map((role, index) => (
+                                    <span key={index}>
+                                                    {role.name}{index !== selectedUserInfo.roles.length - 1 ? ', ' : ''}
+                                                </span>))
+                                }
+                            </h6>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer className="justify-content-center">
+                    <Button variant="secondary" onClick={() => setShowUserInfoModal(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
         </>
     );
 }

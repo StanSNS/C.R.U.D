@@ -29,19 +29,21 @@ public class HomeController {
 
 
     /**
-     * Sorts and retrieves users based on the specified action.
+     * Retrieves users based on the specified action.
      *
-     * @param action   The action to be performed. Possible values: ALL_USERS_DEFAULT, ALL_USERS_SORT_BY_LAST_NAME_AND_DOB,
-     *                 ALL_USERS_FOUND_BY_LAST_NAME, ONE_RANDOM_USER.
-     * @param email    Email of the user for authentication.
-     * @param password Password of the user for authentication.
-     * @return ResponseEntity<List < UserDetailsDTO>> A response entity with a list of user data and status OK.
-     * @throws MissingParameterException Thrown when required parameters are missing.
+     * @param action               The action to perform (e.g., get all users by default, sort users, etc.).
+     * @param email                The email of the user for authentication.
+     * @param password             The password of the user for authentication.
+     * @param selectedUserEmail    The email of the selected user (optional).
+     * @param searchTerm           The search term (optional).
+     * @param selectedSearchOption The selected search option (optional).
+     * @return ResponseEntity<?>   A response entity containing user data or an error response.
      */
     @GetMapping
-    public ResponseEntity<List<UserDetailsDTO>> getUsers(@RequestParam String action,
+    public ResponseEntity<?> getUsers(@RequestParam String action,
                                                          @RequestParam String email,
                                                          @RequestParam String password,
+                                                         @RequestParam(required = false) String selectedUserEmail,
                                                          @RequestParam(required = false) String searchTerm,
                                                          @RequestParam(required = false) String selectedSearchOption) {
 
@@ -49,7 +51,7 @@ public class HomeController {
             case ALL_USERS_DEFAULT -> new ResponseEntity<>(homeService.getAllUsersByDefault(email, password), HttpStatus.OK);
             case ALL_USERS_SORT_BY_LAST_NAME_AND_DOB -> new ResponseEntity<>(homeService.getAllUsersOrderedByLastNameAndDateOfBirth(email, password), HttpStatus.OK);
             case ALL_USERS_FOUND_BY_PARAMETER -> new ResponseEntity<>(homeService.getAllUsersByParameter(email, password, UriComponentsBuilder.fromUriString(searchTerm).build().encode().toUriString(), selectedSearchOption), HttpStatus.OK);
-            case ONE_RANDOM_USER -> new ResponseEntity<>(homeService.getRandomUser(email, password), HttpStatus.OK);
+            case GET_SELECTED_USER -> new ResponseEntity<>(homeService.getSelectedUser(email, password, selectedUserEmail), HttpStatus.OK);
             default -> throw new MissingParameterException();
         };
     }

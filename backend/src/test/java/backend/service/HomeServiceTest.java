@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Set;
 
 import static backend.constants.ActionConst.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -111,43 +112,80 @@ public class HomeServiceTest {
         verify(validationUtil).isValid(any());
     }
 
+
     @Test
-    void testGetRandomUser_ValidCredentials_ReturnsRandomUser() {
-        String email = "test@example.com";
-        String password = "password";
+    void testGetSelectedUser_ValidUserDetails_ReturnsUserDetailsDTO() {
+        String userEmail = "test@example.com";
+        String userPassword = "password";
+        String selectedUserEmail = "selectedUser@example.com";
 
-        UserEntity mockedUserEntity = new UserEntity();
-        when(validateData.validateUserWithPassword(email, password)).thenReturn(mockedUserEntity);
+        UserEntity userEntity = new UserEntity();
+        userEntity.setEmail(selectedUserEmail);
 
-        UserEntity userEntity1 = new UserEntity();
-        userEntity1.setFirstName("User1");
-        userEntity1.setId(1L);
+        UserDetailsDTO userDetailsDTO = new UserDetailsDTO();
+        userDetailsDTO.setEmail(selectedUserEmail);
 
-        UserEntity userEntity2 = new UserEntity();
-        userEntity2.setFirstName("User2");
-        userEntity2.setId(2L);
+        when(validateData.validateUserWithPassword(userEmail, userPassword)).thenReturn(new UserEntity());
+        when(userEntityRepository.findByEmail(selectedUserEmail)).thenReturn(userEntity);
+        when(modelMapper.map(userEntity, UserDetailsDTO.class)).thenReturn(userDetailsDTO);
+        when(validationUtil.isValid(userDetailsDTO)).thenReturn(true);
 
-        UserEntity userEntity3 = new UserEntity();
-        userEntity3.setFirstName("User3");
-        userEntity3.setId(3L);
+        UserDetailsDTO result = homeService.getSelectedUser(userEmail, userPassword, selectedUserEmail);
 
-        List<UserEntity> mockedUserEntities = new ArrayList<>();
-        mockedUserEntities.add(userEntity1);
-        mockedUserEntities.add(userEntity2);
-        mockedUserEntities.add(userEntity3);
+        assertEquals(selectedUserEmail, result.getEmail());
 
-        when(userEntityRepository.findAll()).thenReturn(mockedUserEntities);
-
-        List<UserDetailsDTO> result = homeService.getRandomUser(email, password);
-
-        assertNotNull(result);
-
-        verify(validateData, times(1)).validateUserWithPassword(email, password);
-        verify(userEntityRepository, times(1)).findAll();
+        verify(validateData, times(1)).validateUserWithPassword(userEmail, userPassword);
+        verify(userEntityRepository, times(1)).findByEmail(selectedUserEmail);
+        verify(modelMapper, times(1)).map(userEntity, UserDetailsDTO.class);
+        verify(validationUtil, times(1)).isValid(userDetailsDTO);
     }
 
     @Test
-    void testGetAllUsersByParamete_LAST_NAMEr() {
+    void testGetSelectedUser_UserNotFound_ThrowsResourceNotFoundException() {
+        String userEmail = "test@example.com";
+        String userPassword = "password";
+        String selectedUserEmail = "nonExistingUser@example.com";
+
+        when(validateData.validateUserWithPassword(userEmail, userPassword)).thenReturn(new UserEntity());
+        when(userEntityRepository.findByEmail(selectedUserEmail)).thenReturn(null);
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> homeService.getSelectedUser(userEmail, userPassword, selectedUserEmail));
+
+        verify(validateData, times(1)).validateUserWithPassword(userEmail, userPassword);
+        verify(userEntityRepository, times(1)).findByEmail(selectedUserEmail);
+        verify(modelMapper, never()).map(any(), eq(UserDetailsDTO.class));
+        verify(validationUtil, never()).isValid(any());
+    }
+
+    @Test
+    void testGetSelectedUser_InvalidUserDetails_ThrowsDataValidationException() {
+        String userEmail = "test@example.com";
+        String userPassword = "password";
+        String selectedUserEmail = "selectedUser@example.com";
+
+        UserEntity userEntity = new UserEntity();
+        userEntity.setEmail(selectedUserEmail);
+
+        UserDetailsDTO userDetailsDTO = new UserDetailsDTO();
+        userDetailsDTO.setEmail(selectedUserEmail);
+
+        when(validateData.validateUserWithPassword(userEmail, userPassword)).thenReturn(new UserEntity());
+        when(userEntityRepository.findByEmail(selectedUserEmail)).thenReturn(userEntity);
+        when(modelMapper.map(userEntity, UserDetailsDTO.class)).thenReturn(userDetailsDTO);
+        when(validationUtil.isValid(userDetailsDTO)).thenReturn(false);
+
+        assertThrows(DataValidationException.class,
+                () -> homeService.getSelectedUser(userEmail, userPassword, selectedUserEmail));
+
+        verify(validateData, times(1)).validateUserWithPassword(userEmail, userPassword);
+        verify(userEntityRepository, times(1)).findByEmail(selectedUserEmail);
+        verify(modelMapper, times(1)).map(userEntity, UserDetailsDTO.class);
+        verify(validationUtil, times(1)).isValid(userDetailsDTO);
+    }
+
+    @Test
+    void testGetAllUsersByParameter_LAST_NAMEr() {
         String email = "test@example.com";
         String password = "password";
         String searchTerm = "Doe";
@@ -243,23 +281,6 @@ public class HomeServiceTest {
 
 
     @Test
-    void testGetRandomUser_NoUsersAvailable_ThrowsResourceNotFoundException() {
-        String email = "test@example.com";
-        String password = "password";
-
-        UserEntity mockedUserEntity = new UserEntity();
-        when(validateData.validateUserWithPassword(email, password)).thenReturn(mockedUserEntity);
-
-        when(userEntityRepository.findAll()).thenReturn(List.of());
-
-        assertThrows(ResourceNotFoundException.class, () -> homeService.getRandomUser(email, password));
-
-        verify(validateData, times(1)).validateUserWithPassword(email, password);
-        verify(userEntityRepository, times(1)).findAll();
-        verify(modelMapper, never()).map(any(UserEntity.class), eq(UserDetailsDTO.class));
-    }
-
-    @Test
     void testGetAllUsersByParameter_EmailSearch() {
         String email = "test@example.com";
         String password = "password";
@@ -285,7 +306,6 @@ public class HomeServiceTest {
         verify(modelMapper, times(1)).map(any(), eq(UserDetailsDTO.class));
         verify(validationUtil, times(1)).isValid(any());
     }
-
 
 
     private UserEntity createUser(String firstName, String lastName) {

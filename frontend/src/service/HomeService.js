@@ -42,14 +42,14 @@ export const getAllUsersSearch = (email, password, searchTerm, selectedSearchOpt
     })
 }
 
-// Fetch a random user using email and password for authorization
-export const getRandomUser = (email, password) => {
-    const url = `http://localhost:8000/home?action=getRandomUser&email=${email}&password=${password}`;
+// Fetch a selected user info using email and password for authorization
+export const getSelectedUserInfo = (email, password, selectedUserEmail) => {
+    const url = `http://localhost:8000/home?action=getSelectedUser&email=${email}&password=${password}&selectedUserEmail=${selectedUserEmail}`;
     return axios.get(url).then((response) => {
         if (response.status === 200) {
             return response.data;
         } else {
-            throw new Error('Failed to get random User!');
+            throw new Error('Failed to get selected User!');
         }
     }).catch((error) => {
         throw error;

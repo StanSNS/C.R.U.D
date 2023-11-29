@@ -1,7 +1,7 @@
 .flip-card {
     background-color: transparent;
     width: 340px;
-    height: 340px;
+    height: 326px;
     perspective: 1000px;
     font-family: sans-serif;
 }
@@ -53,10 +53,6 @@
     transform: rotateY(180deg);
 }
 
-.reduceFontSizeImports {
-    font-size: 10px;
-}
-
 .reduceFontSize {
     font-size: 15px;
 }
@@ -75,14 +71,6 @@
 
 .greenWordColor {
     color: #8cce26;
-}
-
-.customBin {
-    scale: 1.5;
-    margin-left: 22%;
-    border: none;
-    background: none;
-    color: #dc1c1c;
 }
 
 .customLogoutButton {
@@ -131,22 +119,14 @@
     width: 160%;
 }
 
-.customEditButton {
-    border: none;
-    background: none;
-    color: deepskyblue;
-}
-
 .customStyleErrorMSG {
     color: red;
 }
 
-.errorIcon {
-    color: red;
-    scale: 5;
+.customMarginTop{
+    margin-top: 3%;
 }
 
-.customInfoIcon {
-    margin-left: 72%;
-    color: deepskyblue;
+.customWidth{
+    width: 95%;
 }
