@@ -238,81 +238,94 @@ export default function Home() {
                                 <div className="flip-card-inner">
                                     <div className="flip-card-front">
 
-                                        <div className="text-center mt-2">
-                                            <span className="ml-2 mr-2">{user.firstName}</span>
-                                            <span className="mr-2">{user.lastName}</span>
-                                        </div>
+                                        <h4 className="mb-4 mt-3">
+                                            User Details:
+                                        </h4>
 
-                                        <span><span className="yellowWordColor">Date of Birth: </span>{user.dateOfBirth}</span>
+                                        <h6 className="text-left mb-4 ml-4">
+                                            <span className="orangeWordColor">First Name: </span> {user.firstName}
+                                        </h6>
 
-                                        <div className="text-left mb-3 ml-3 mt-3">
-                                            <h6 className="orangeWordColor">Roles:</h6>
-                                            <h6 className="text-left ml-2">
-                                                {user.roles.map((role, index) => (
-                                                    <span
-                                                        key={index}>{role.name}{index !== user.roles.length - 1 ? ', ' : ''}</span>
-                                                ))}
-                                            </h6>
-                                        </div>
+                                        <h6 className="text-left mb-4 ml-4">
+                                            <span className="orangeWordColor">Last Name: </span> {user.lastName}
+                                        </h6>
 
-                                        <div className="text-left mb-3 ml-3">
-                                            <h6 className="orangeWordColor">User Details:</h6>
+                                        <h6 className="text-left mb-4 ml-4">
+                                            <span className="orangeWordColor">Date of Birth: </span> {user.dateOfBirth}
+                                        </h6>
 
-                                            <h6 className="text-left ml-2"><span
-                                                className="yellowWordColor">Email: </span>{user.email}</h6>
+                                        <h6 className="text-left mb-4 ml-4">
+                                            <span className="orangeWordColor">Email: </span> {user.email}
+                                        </h6>
 
-                                            <h6 className="text-left ml-2"><span className="yellowWordColor">Phone number: </span>{user.phoneNumber}
-                                            </h6>
+                                        <h6 className="text-left mb-4 ml-4">
+                                            <span className="orangeWordColor">Phone number: </span> {user.phoneNumber}
+                                        </h6>
 
-                                            <h6 className="text-left ml-2"><span className="yellowWordColor">Registered on: </span>{user.registerDate}
-                                            </h6>
-                                        </div>
-
-                                        <div className="text-left mb-3 ml-3">
-                                            <h6 className="orangeWordColor">Location Details:</h6>
-
-                                            <h6 className="text-left ml-2"><span
-                                                className="yellowWordColor">Country: </span>{user.country}</h6>
-
-                                            <h6 className="text-left ml-2"><span
-                                                className="yellowWordColor">Currency: </span>{user.currency}</h6>
-
-                                            <h6 className="text-left ml-2"><span
-                                                className="yellowWordColor">City: </span>{user.city}</h6>
-                                        </div>
+                                        <h6 className="text-left mb-4 ml-4">
+                                            <span className="orangeWordColor">Roles: </span>
+                                            {user.roles.map((role, index) => (
+                                            <span key={index}>{role.name}{index !== user.roles.length - 1 ? ', ' : ''}</span>))}
+                                        </h6>
 
                                     </div>
 
                                     <div className="flip-card-back">
-                                        <div className="text-left ml-4 mt-1">
-                                            <p className="reduceFontSize mb-0"><span
-                                                className="yellowWordColor">@Getter</span></p>
+                                        <div className="text-left ml-3 mt-3">
 
                                             <p className="reduceFontSize mb-0"><span
-                                                className="yellowWordColor">@Setter</span></p>
+                                                className="yellowWordColor">@Entity</span></p>
 
-                                            <p className="reduceFontSize mb-1"><span className="orangeWordColor">public class </span>UserDetailsDTO {'{'}
+                                            <p className="reduceFontSize mb-0">
+                                                <span className="yellowWordColor">
+                                                    @Table
+                                                </span>
+                                                <span>(name =<span className="greenWordColor"> "users" </span>)</span>
+
+
+                                            </p>
+
+                                            <p className="reduceFontSize mb-1">
+                                                <span className="orangeWordColor">
+                                                    public class
+                                                </span> UserEntity <span>
+                                                   <span className="orangeWordColor"> extends </span>
+                                                </span> BaseEntity {"{"}
                                             </p>
 
                                             <p className="reduceFontSize mb-2 ml-4"><span
                                                 className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">firstName</span>;</p>
+                                                className="pinkWordColor">firstName</span>;
+
+                                                <button
+                                                    className="customEditButton ml-1 font-weight-bolder"
+                                                    onClick={() => handleEditUser(user)}>
+                                                    {'{EDIT}'}
+                                                </button>
+
+                                            </p>
 
                                             <p className="reduceFontSize mb-2 ml-4"><span
                                                 className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">lastName</span>;</p>
+                                                className="pinkWordColor">lastName</span>;
+
+                                                <button
+                                                    className="customEditButton ml-1 font-weight-bolder"
+                                                    onClick={() => handleEditUser(user)}>
+                                                    {'{EDIT}'}
+                                                </button>
+                                            </p>
 
                                             <p className="reduceFontSize mb-2 ml-4"><span
                                                 className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">dateOfBirth</span>;</p>
+                                                className="pinkWordColor">dateOfBirth</span>;
 
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> Set{'<RoleDTO>'} <span
-                                                className="pinkWordColor">roles</span>;</p>
-
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">email</span>;</p>
+                                                <button
+                                                    className="customEditButton ml-1 font-weight-bolder"
+                                                    onClick={() => handleEditUser(user)}>
+                                                    {'{EDIT}'}
+                                                </button>
+                                            </p>
 
                                             <p className="reduceFontSize mb-2 ml-4"><span
                                                 className="orangeWordColor">private</span> String <span
@@ -327,26 +340,37 @@ export default function Home() {
 
                                             <p className="reduceFontSize mb-2 ml-4"><span
                                                 className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">registerDate</span>;</p>
+                                                className="pinkWordColor">email</span>;
 
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">country</span>;</p>
-
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">currency</span>;</p>
-
-                                            <p className="reduceFontSize mb-2 ml-4"><span
-                                                className="orangeWordColor">private</span> String <span
-                                                className="pinkWordColor">city</span>;
-
-                                                {isAdministrator() && !user.roles.some(role => role.name === "ADMIN") &&
-                                                    <button className="customBin"
-                                                            onClick={() => handleDeleteUser(user)}><FaTrashAlt/>
-                                                    </button>
-                                                }
+                                                <button
+                                                    className="customEditButton ml-1 font-weight-bolder"
+                                                    onClick={() => handleEditUser(user)}>
+                                                    {'{EDIT}'}
+                                                </button>
                                             </p>
+
+                                            <p className="reduceFontSize mb-2 ml-4"><span
+                                                className="orangeWordColor">private</span> String <span
+                                                className="pinkWordColor">password</span>;
+
+                                                <button
+                                                    className="customEditButton ml-1 font-weight-bolder"
+                                                    onClick={() => handleEditUser(user)}>
+                                                    {'{EDIT}'}
+                                                </button>
+                                            </p>
+
+
+                                            <p className="reduceFontSize mb-2 ml-4"><span
+                                                className="orangeWordColor">private</span> Set{'<RoleEntity>'} <span
+                                                className="pinkWordColor">roles</span>;
+                                            </p>
+
+                                            {isAdministrator() && !user.roles.some(role => role.name === "ADMIN") &&
+                                                <button className="customBin"
+                                                        onClick={() => handleDeleteUser(user)}><FaTrashAlt/>
+                                                </button>
+                                            }
 
                                             <p className="reduceFontSize ml-1 mb-2 ">{'}'}</p>
                                         </div>

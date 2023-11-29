@@ -1,7 +1,6 @@
 package backend.controller;
 
 import backend.dto.UserDetailsDTO;
-import backend.exception.MissingParameterException;
 import backend.service.HomeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +8,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -91,7 +89,7 @@ public class HomeControllerTest {
 
     @Test
     void testDeleteUser() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.put("/home")
+        mockMvc.perform(MockMvcRequestBuilders.delete("/home")
                         .param("email", "test@email.com")
                         .param("password", "testPassword")
                         .param("userToDeleteEmail", "userToDelete@email.com"))

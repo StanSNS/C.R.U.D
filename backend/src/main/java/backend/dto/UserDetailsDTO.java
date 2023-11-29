@@ -28,16 +28,4 @@ public class UserDetailsDTO {
     @NotNull
     private String phoneNumber;
 
-    @NotNull
-    private String registerDate;
-
-    @NotNull
-    private String country;
-
-    @NotNull
-    private String currency;
-
-    @NotNull
-    private String city;
-
 }

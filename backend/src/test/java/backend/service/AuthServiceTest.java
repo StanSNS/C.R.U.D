@@ -11,7 +11,6 @@ import backend.exception.ResourceNotFoundException;
 import backend.repository.RoleEntityRepository;
 import backend.repository.UserEntityRepository;
 import backend.util.CustomDateFormatter;
-import backend.util.LocationInfo;
 import backend.util.ValidationUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,9 +44,6 @@ public class AuthServiceTest {
 
     @Mock
     private CustomDateFormatter customDateFormatter;
-
-    @Mock
-    private LocationInfo locationInfo;
 
     @Mock
     private AuthenticationManager authenticationManager;

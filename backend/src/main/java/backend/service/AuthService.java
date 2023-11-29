@@ -11,7 +11,6 @@ import backend.exception.ResourceNotFoundException;
 import backend.repository.RoleEntityRepository;
 import backend.repository.UserEntityRepository;
 import backend.util.CustomDateFormatter;
-import backend.util.LocationInfo;
 import backend.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -22,7 +21,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,7 +44,6 @@ public class AuthService {
     private final ModelMapper modelMapper;
     private final ValidationUtil validationUtil;
     private final CustomDateFormatter customDateFormatter;
-    private final LocationInfo locationInfo;
 
 
     /**
@@ -69,9 +66,6 @@ public class AuthService {
         UserEntity userEntity = modelMapper.map(registerDto, UserEntity.class);
         userEntity.setPassword(passwordEncoder.encode(registerDto.getPassword()));
         userEntity.setDateOfBirth(customDateFormatter.convertToLocalDateFormat(registerDto.getDateOfBirth()));
-        userEntity.setRegisterDate(customDateFormatter.formatLocalDateTimeNowAsString(LocalDateTime.now()));
-
-        locationInfo.setUserLocations(userEntity);
 
         Set<RoleEntity> roles = new HashSet<>();
         if (userRepository.count() == 0) {

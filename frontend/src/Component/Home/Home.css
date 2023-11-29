@@ -1,7 +1,7 @@
 .flip-card {
     background-color: transparent;
-    width: 320px;
-    height: 380px;
+    width: 340px;
+    height: 340px;
     perspective: 1000px;
     font-family: sans-serif;
 }
@@ -58,7 +58,7 @@
 }
 
 .reduceFontSize {
-    font-size: 13.5px;
+    font-size: 15px;
 }
 
 .pinkWordColor {
@@ -71,6 +71,10 @@
 
 .yellowWordColor {
     color: #fff200;
+}
+
+.greenWordColor{
+    color: #8cce26;
 }
 
 .customBin {
