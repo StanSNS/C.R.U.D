@@ -41,7 +41,7 @@ public class HomeControllerTest {
                 .thenReturn(Collections.singletonList(new UserDetailsDTO()));
         when(homeService.getAllUsersOrderedByLastNameAndDateOfBirth(anyString(), anyString()))
                 .thenReturn(Collections.singletonList(new UserDetailsDTO()));
-        when(homeService.getAllUsersSortedByLastName(anyString(), anyString(), anyString()))
+        when(homeService.getAllUsersByParameter(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Collections.singletonList(new UserDetailsDTO()));
         when(homeService.getRandomUser(anyString(), anyString()))
                 .thenReturn(Collections.singletonList(new UserDetailsDTO()));
@@ -61,10 +61,11 @@ public class HomeControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/home")
-                        .param("action", ALL_USERS_FOUND_BY_LAST_NAME)
+                        .param("action", ALL_USERS_FOUND_BY_PARAMETER)
                         .param("email", "test@email.com")
                         .param("password", "testPassword")
-                        .param("lastNameSearch", "LastName"))
+                        .param("searchTerm", "LastName")
+                        .param("selectedSearchOption", "LastName"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
 
@@ -83,7 +84,7 @@ public class HomeControllerTest {
 
         verify(homeService, times(1)).getAllUsersByDefault(anyString(), anyString());
         verify(homeService, times(1)).getAllUsersOrderedByLastNameAndDateOfBirth(anyString(), anyString());
-        verify(homeService, times(1)).getAllUsersSortedByLastName(anyString(), anyString(), anyString());
+        verify(homeService, times(1)).getAllUsersByParameter(anyString(), anyString(), anyString(), anyString());
         verify(homeService, times(1)).getRandomUser(anyString(), anyString());
     }
 

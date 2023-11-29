@@ -5,6 +5,7 @@ import backend.entity.RoleEntity;
 import backend.entity.UserEntity;
 import backend.exception.AccessDeniedException;
 import backend.exception.DataValidationException;
+import backend.exception.MissingParameterException;
 import backend.exception.ResourceNotFoundException;
 import backend.repository.UserEntityRepository;
 import backend.util.ValidateData;
@@ -23,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static backend.constants.ActionConst.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -145,6 +147,102 @@ public class HomeServiceTest {
     }
 
     @Test
+    void testGetAllUsersByParamete_LAST_NAMEr() {
+        String email = "test@example.com";
+        String password = "password";
+        String searchTerm = "Doe";
+
+        List<UserEntity> mockedUsers = new ArrayList<>();
+        mockedUsers.add(createUser("John", "Doe"));
+        mockedUsers.add(createUser("Jane", "Doe"));
+
+        when(userEntityRepository.findAllByLastName(searchTerm)).thenReturn(mockedUsers);
+
+        when(modelMapper.map(any(), eq(UserDetailsDTO.class))).thenAnswer(invocation -> {
+            UserEntity userEntity = invocation.getArgument(0);
+            return new UserDetailsDTO();
+        });
+
+        when(validationUtil.isValid(any())).thenReturn(true);
+
+        List<UserDetailsDTO> result = homeService.getAllUsersByParameter(email, password, searchTerm, SEARCH_USERS_BY_LAST_NAME);
+
+        assertEquals(2, result.size());
+        verify(validateData).validateUserWithPassword(email, password);
+        verify(userEntityRepository).findAllByLastName(searchTerm);
+        verify(modelMapper, times(2)).map(any(), eq(UserDetailsDTO.class));
+        verify(validationUtil, times(2)).isValid(any());
+    }
+
+
+    @Test
+    void testGetAllUsersByParameter_InvalidSearchOption_ThrowsMissingParameterException() {
+        String email = "test@example.com";
+        String password = "password";
+        String searchTerm = "Doe";
+        String invalidSearchOption = "INVALID_SEARCH_OPTION";
+
+        assertThrows(MissingParameterException.class, () ->
+                homeService.getAllUsersByParameter(email, password, searchTerm, invalidSearchOption));
+    }
+
+    @Test
+    void testGetAllUsersByParameter_FirstNameSearch() {
+        String email = "test@example.com";
+        String password = "password";
+        String searchTerm = "John";
+
+        List<UserEntity> mockedUsers = new ArrayList<>();
+        mockedUsers.add(createUser("John", "Doe"));
+        mockedUsers.add(createUser("John", "Smith"));
+
+        when(userEntityRepository.findAllByFirstName(searchTerm)).thenReturn(mockedUsers);
+
+        when(modelMapper.map(any(), eq(UserDetailsDTO.class))).thenAnswer(invocation -> {
+            UserEntity userEntity = invocation.getArgument(0);
+            return new UserDetailsDTO();
+        });
+
+        when(validationUtil.isValid(any())).thenReturn(true);
+
+        List<UserDetailsDTO> result = homeService.getAllUsersByParameter(email, password, searchTerm, SEARCH_USERS_BY_FIRST_NAME);
+
+        assertEquals(2, result.size());
+        verify(validateData).validateUserWithPassword(email, password);
+        verify(userEntityRepository).findAllByFirstName(searchTerm);
+        verify(modelMapper, times(2)).map(any(), eq(UserDetailsDTO.class));
+        verify(validationUtil, times(2)).isValid(any());
+    }
+
+    @Test
+    void testGetAllUsersByParameter_PhoneNumberSearch() {
+        String email = "test@example.com";
+        String password = "password";
+        String searchTerm = "1234567890";
+
+        List<UserEntity> mockedUsers = new ArrayList<>();
+        mockedUsers.add(createUser("John", "Doe"));
+
+        when(userEntityRepository.findAllByPhoneNumber(searchTerm)).thenReturn(mockedUsers);
+
+        when(modelMapper.map(any(), eq(UserDetailsDTO.class))).thenAnswer(invocation -> {
+            UserEntity userEntity = invocation.getArgument(0);
+            return new UserDetailsDTO();
+        });
+
+        when(validationUtil.isValid(any())).thenReturn(true);
+
+        List<UserDetailsDTO> result = homeService.getAllUsersByParameter(email, password, searchTerm, SEARCH_USERS_BY_PHONE_NUMBER);
+
+        assertEquals(1, result.size());
+        verify(validateData).validateUserWithPassword(email, password);
+        verify(userEntityRepository).findAllByPhoneNumber(searchTerm);
+        verify(modelMapper, times(1)).map(any(), eq(UserDetailsDTO.class));
+        verify(validationUtil, times(1)).isValid(any());
+    }
+
+
+    @Test
     void testGetRandomUser_NoUsersAvailable_ThrowsResourceNotFoundException() {
         String email = "test@example.com";
         String password = "password";
@@ -162,16 +260,15 @@ public class HomeServiceTest {
     }
 
     @Test
-    void testGetAllUsersSortedByLastName() {
+    void testGetAllUsersByParameter_EmailSearch() {
         String email = "test@example.com";
         String password = "password";
-        String lastNameSearch = "Doe";
+        String searchTerm = "test@example.com";
 
         List<UserEntity> mockedUsers = new ArrayList<>();
         mockedUsers.add(createUser("John", "Doe"));
-        mockedUsers.add(createUser("Jane", "Doe"));
 
-        when(userEntityRepository.findAllByLastName(lastNameSearch)).thenReturn(mockedUsers);
+        when(userEntityRepository.findAllByEmail(searchTerm)).thenReturn(mockedUsers);
 
         when(modelMapper.map(any(), eq(UserDetailsDTO.class))).thenAnswer(invocation -> {
             UserEntity userEntity = invocation.getArgument(0);
@@ -180,42 +277,16 @@ public class HomeServiceTest {
 
         when(validationUtil.isValid(any())).thenReturn(true);
 
-        List<UserDetailsDTO> result = homeService.getAllUsersSortedByLastName(email, password, lastNameSearch);
+        List<UserDetailsDTO> result = homeService.getAllUsersByParameter(email, password, searchTerm, SEARCH_USERS_BY_EMAIL);
 
-        assertEquals(2, result.size());
-
+        assertEquals(1, result.size());
         verify(validateData).validateUserWithPassword(email, password);
-        verify(userEntityRepository).findAllByLastName(lastNameSearch);
-        verify(modelMapper, times(2)).map(any(), eq(UserDetailsDTO.class));
-        verify(validationUtil, times(2)).isValid(any());
+        verify(userEntityRepository).findAllByEmail(searchTerm);
+        verify(modelMapper, times(1)).map(any(), eq(UserDetailsDTO.class));
+        verify(validationUtil, times(1)).isValid(any());
     }
 
-    @Test
-    void testGetAllUsersSortedByLastName_ValidationFails() {
-        String email = "test@example.com";
-        String password = "password";
-        String lastNameSearch = "Doe";
 
-        List<UserEntity> mockedUsers = new ArrayList<>();
-        mockedUsers.add(createUser("John", "Doe"));
-        mockedUsers.add(createUser("Jane", "Doe"));
-
-        when(userEntityRepository.findAllByLastName(lastNameSearch)).thenReturn(mockedUsers);
-
-        when(modelMapper.map(any(), eq(UserDetailsDTO.class))).thenAnswer(invocation -> {
-            UserEntity userEntity = invocation.getArgument(0);
-            return new UserDetailsDTO();
-        });
-
-        when(validationUtil.isValid(any())).thenReturn(false);
-
-        assertThrows(DataValidationException.class, () -> {
-            homeService.getAllUsersSortedByLastName(email, password, lastNameSearch);
-        });
-
-        verify(validateData).validateUserWithPassword(email, password);
-        verify(userEntityRepository).findAllByLastName(lastNameSearch);
-    }
 
     private UserEntity createUser(String firstName, String lastName) {
         UserEntity userEntity = new UserEntity();

@@ -14,10 +14,36 @@ public interface UserEntityRepository extends JpaRepository<UserEntity, Long> {
     /**
      * Finds all users with a given last name.
      *
-     * @param name The last name to search for.
+     * @param lastName The last name to search for.
      * @return List<UserEntity> A list of user entities with the specified last name.
      */
-    List<UserEntity> findAllByLastName(String name);
+    List<UserEntity> findAllByLastName(String lastName);
+
+    /**
+     * Finds all users with a given first name.
+     *
+     * @param firstName The last name to search for.
+     * @return List<UserEntity> A list of user entities with the specified first name.
+     */
+    List<UserEntity> findAllByFirstName(String firstName);
+
+    /**
+     * Finds all users with a given phone number.
+     *
+     * @param phoneNumber The last name to search for.
+     * @return List<UserEntity> A list of user entities with the specified phone number.
+     */
+    List<UserEntity> findAllByPhoneNumber(String phoneNumber);
+
+
+    /**
+     * Finds all users with a given email.
+     *
+     * @param email The last name to search for.
+     * @return List<UserEntity> A list of user entities with the specified email.
+     */
+    List<UserEntity> findAllByEmail(String email);
+
 
     /**
      * Finds all users ordered by last name and date of birth.

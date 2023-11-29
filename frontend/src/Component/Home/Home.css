@@ -73,13 +73,13 @@
     color: #fff200;
 }
 
-.greenWordColor{
+.greenWordColor {
     color: #8cce26;
 }
 
 .customBin {
     scale: 1.5;
-    margin-left: 48%;
+    margin-left: 22%;
     border: none;
     background: none;
     color: #dc1c1c;
@@ -141,7 +141,12 @@
     color: red;
 }
 
-.errorIcon{
+.errorIcon {
     color: red;
     scale: 5;
+}
+
+.customInfoIcon {
+    margin-left: 72%;
+    color: deepskyblue;
 }

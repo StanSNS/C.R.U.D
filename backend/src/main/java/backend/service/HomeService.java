@@ -5,6 +5,7 @@ import backend.entity.Base.BaseEntity;
 import backend.entity.UserEntity;
 import backend.exception.AccessDeniedException;
 import backend.exception.DataValidationException;
+import backend.exception.MissingParameterException;
 import backend.exception.ResourceNotFoundException;
 import backend.repository.UserEntityRepository;
 import backend.util.ValidateData;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+
+import static backend.constants.ActionConst.*;
 
 @Service
 @RequiredArgsConstructor
@@ -121,23 +124,73 @@ public class HomeService {
      *
      * @param email          Email of the user for authentication.
      * @param password       Password of the user for authentication.
-     * @param lastNameSearch Last name to search for.
+     * @param searchTerm     The provided value from the input;
+     * @param selectedSearchOption     The selected option from the field
      * @return List<UserDetailsDTO> A list of UserDetailsDTO representing users with the specified last name.
      */
-    public List<UserDetailsDTO> getAllUsersSortedByLastName(String email, String password, String lastNameSearch) {
+    public List<UserDetailsDTO> getAllUsersByParameter(String email, String password, String searchTerm, String selectedSearchOption) {
         validateData.validateUserWithPassword(email, password);
 
-        return userEntityRepository
-                .findAllByLastName(lastNameSearch)
-                .stream()
-                .map(user -> {
-                            UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
-                            if (!validationUtil.isValid(userDetailsDTO)) {
-                                throw new DataValidationException();
-                            }
-                            return userDetailsDTO;
-                        }
-                ).collect(Collectors.toList());
+        switch (selectedSearchOption) {
+            case SEARCH_USERS_BY_FIRST_NAME -> {
+                return userEntityRepository
+                        .findAllByFirstName(searchTerm)
+                        .stream()
+                        .map(user -> {
+                                    UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
+                                    if (!validationUtil.isValid(userDetailsDTO)) {
+                                        throw new DataValidationException();
+                                    }
+                                    return userDetailsDTO;
+                                }
+                        ).collect(Collectors.toList());
+            }
+            case SEARCH_USERS_BY_LAST_NAME -> {
+                return userEntityRepository
+                        .findAllByLastName(searchTerm)
+                        .stream()
+                        .map(user -> {
+                                    UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
+                                    if (!validationUtil.isValid(userDetailsDTO)) {
+                                        throw new DataValidationException();
+                                    }
+                                    return userDetailsDTO;
+                                }
+                        ).collect(Collectors.toList());
+            }
+            case SEARCH_USERS_BY_PHONE_NUMBER -> {
+                if(searchTerm.contains("%20")){
+                    searchTerm = searchTerm.replace("%20", "+");
+                }
+
+                return userEntityRepository
+                        .findAllByPhoneNumber(searchTerm)
+                        .stream()
+                        .map(user -> {
+                                    UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
+                                    if (!validationUtil.isValid(userDetailsDTO)) {
+                                        throw new DataValidationException();
+                                    }
+                                    return userDetailsDTO;
+                                }
+                        ).collect(Collectors.toList());
+            }
+            case SEARCH_USERS_BY_EMAIL -> {
+                return userEntityRepository
+                        .findAllByEmail(searchTerm)
+                        .stream()
+                        .map(user -> {
+                                    UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
+                                    if (!validationUtil.isValid(userDetailsDTO)) {
+                                        throw new DataValidationException();
+                                    }
+                                    return userDetailsDTO;
+                                }
+                        ).collect(Collectors.toList());
+            }
+        }
+
+        throw new MissingParameterException();
     }
 
 

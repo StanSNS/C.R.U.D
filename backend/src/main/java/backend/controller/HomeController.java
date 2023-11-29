@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
@@ -30,24 +31,25 @@ public class HomeController {
     /**
      * Sorts and retrieves users based on the specified action.
      *
-     * @param action           The action to be performed. Possible values: ALL_USERS_DEFAULT, ALL_USERS_SORT_BY_LAST_NAME_AND_DOB,
-     *                         ALL_USERS_FOUND_BY_LAST_NAME, ONE_RANDOM_USER.
-     * @param email            Email of the user for authentication.
-     * @param password         Password of the user for authentication.
-     * @param lastNameSearch   Last name for searching (required only for ALL_USERS_FOUND_BY_LAST_NAME action).
-     * @return ResponseEntity<List<UserDetailsDTO>> A response entity with a list of user data and status OK.
+     * @param action   The action to be performed. Possible values: ALL_USERS_DEFAULT, ALL_USERS_SORT_BY_LAST_NAME_AND_DOB,
+     *                 ALL_USERS_FOUND_BY_LAST_NAME, ONE_RANDOM_USER.
+     * @param email    Email of the user for authentication.
+     * @param password Password of the user for authentication.
+     * @return ResponseEntity<List < UserDetailsDTO>> A response entity with a list of user data and status OK.
      * @throws MissingParameterException Thrown when required parameters are missing.
      */
     @GetMapping
-    public ResponseEntity<List<UserDetailsDTO>> sortUsers(@RequestParam String action,
-                                                          @RequestParam String email,
-                                                          @RequestParam String password,
-                                                          @RequestParam(required = false)  String lastNameSearch) {
+    public ResponseEntity<List<UserDetailsDTO>> getUsers(@RequestParam String action,
+                                                         @RequestParam String email,
+                                                         @RequestParam String password,
+                                                         @RequestParam(required = false) String searchTerm,
+                                                         @RequestParam(required = false) String selectedSearchOption) {
+
         return switch (action) {
             case ALL_USERS_DEFAULT -> new ResponseEntity<>(homeService.getAllUsersByDefault(email, password), HttpStatus.OK);
-            case ALL_USERS_SORT_BY_LAST_NAME_AND_DOB -> new ResponseEntity<>(homeService.getAllUsersOrderedByLastNameAndDateOfBirth(email,password),HttpStatus.OK);
-            case ALL_USERS_FOUND_BY_LAST_NAME -> new ResponseEntity<>(homeService.getAllUsersSortedByLastName(email,password,lastNameSearch), HttpStatus.OK);
-            case ONE_RANDOM_USER -> new ResponseEntity<>(homeService.getRandomUser(email,password),HttpStatus.OK);
+            case ALL_USERS_SORT_BY_LAST_NAME_AND_DOB -> new ResponseEntity<>(homeService.getAllUsersOrderedByLastNameAndDateOfBirth(email, password), HttpStatus.OK);
+            case ALL_USERS_FOUND_BY_PARAMETER -> new ResponseEntity<>(homeService.getAllUsersByParameter(email, password, UriComponentsBuilder.fromUriString(searchTerm).build().encode().toUriString(), selectedSearchOption), HttpStatus.OK);
+            case ONE_RANDOM_USER -> new ResponseEntity<>(homeService.getRandomUser(email, password), HttpStatus.OK);
             default -> throw new MissingParameterException();
         };
     }

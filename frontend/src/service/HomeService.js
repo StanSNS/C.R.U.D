@@ -28,9 +28,9 @@ export const getAllUsersSortedByLastNameAndDOB = (email, password) => {
     })
 }
 
-// Fetch all users found by last name using email and password for authorization, and a search string
-export const getAllUsersSearchByLastName = (email, password, lastNameSearch) => {
-    const url = `http://localhost:8000/home?action=getAllUsersFoundByLastName&email=${email}&password=${password}&lastNameSearch=${lastNameSearch}`;
+// Fetch all users found by selected option using email and password for authorization, and a search string
+export const getAllUsersSearch = (email, password, searchTerm, selectedSearchOption) => {
+    const url = `http://localhost:8000/home?action=getAllUsersFoundByParameter&email=${email}&password=${password}&searchTerm=${searchTerm}&selectedSearchOption=${selectedSearchOption}`;
     return axios.get(url).then((response) => {
         if (response.status === 200) {
             return response.data;

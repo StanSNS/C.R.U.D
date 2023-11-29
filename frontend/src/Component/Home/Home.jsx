@@ -4,14 +4,16 @@ import {useNavigate} from "react-router-dom";
 import {
     changeUserPhoneNumber,
     deleteUser,
-    getAllUsersDefault, getAllUsersSearchByLastName,
-    getAllUsersSortedByLastNameAndDOB, getRandomUser,
+    getAllUsersDefault,
+    getAllUsersSearch,
+    getAllUsersSortedByLastNameAndDOB,
     logoutUser
 } from "../../service/HomeService";
 import {isAdministrator, loggedUserEmail, loggedUserFirstName, loggedUserPassword} from "../../service/AuthService";
 import {FaTrashAlt} from "react-icons/fa";
 import {Button, Modal} from "react-bootstrap";
 import {MdOutlineDangerous} from "react-icons/md";
+import {IoIosInformationCircle} from "react-icons/io";
 
 export default function Home() {
 
@@ -26,6 +28,7 @@ export default function Home() {
     const [editedUser, setEditedUser] = useState(null); // State variable to store information about the user being edited
     const [newPhoneNumber, setNewPhoneNumber] = useState(""); // State variable to store the new phone number input in the edit user modal
     const [phoneNumberError, setPhoneNumberError] = useState(""); // New state for phone number error
+    const [selectedSearchOption, setSelectedSearchOption] = useState("lastName"); // New state to store the selected option
 
 
     // Function that handles the logout button click event.
@@ -123,18 +126,18 @@ export default function Home() {
         setSearchTerm(event.target.value);
     };
 
-    // Handle confirmation for search by last name
+    // Handle confirmation for search by parameter
     const handleSearchModalConfirm = () => {
-        if (searchTerm.trim() === "") {
-            setSearchError("Please enter a last name!");
+        if (searchTerm.trim() === "" && selectedSearchOption) {
+            setSearchError("Search box cannot be empty!");
         } else {
             setSearchError("");
-            getAllUsersSearchByLastName(loggedUserEmail(), loggedUserPassword(), searchTerm)
+            getAllUsersSearch(loggedUserEmail(), loggedUserPassword(), searchTerm, selectedSearchOption)
                 .then((data) => {
                     setUsers(data)
                     setSearchTerm("")
                 }).catch((error) => {
-                console.error("Error getting users by last name: ", error);
+                console.error("Error getting users by search term: ", error);
             });
             setShowSearchModal(false);
         }
@@ -177,15 +180,6 @@ export default function Home() {
         }
     };
 
-    // Handle the click event for getting a random user
-    const handleGetRandomUser = () => {
-        getRandomUser(loggedUserEmail(), loggedUserPassword())
-            .then((data) => {
-                setUsers(data)
-            }).catch((error) => {
-            console.error("Error getting random user: ", error);
-        });
-    };
 
     return (
         <>
@@ -197,25 +191,20 @@ export default function Home() {
                 <div className="mt-2">
                     <button className="sortingButton"
                             onClick={handleDefaultSort}>
-
                         Default Sort
                     </button>
 
                     <button className="sortingButton ml-3 mr-3 "
                             onClick={handleSortByLastNameAndDOB}>
-
                         Sort By Last Name and Date of Birth
                     </button>
 
+
                     <button className="sortingButton"
                             onClick={handleSearchByLastName}>
-                        Search by Last Name
+                        Search by...
                     </button>
 
-                    <button className="sortingButton ml-3"
-                            onClick={handleGetRandomUser}>
-                        Random User
-                    </button>
                 </div>
 
                 <div className="text-right">
@@ -265,7 +254,8 @@ export default function Home() {
                                         <h6 className="text-left mb-4 ml-4">
                                             <span className="orangeWordColor">Roles: </span>
                                             {user.roles.map((role, index) => (
-                                            <span key={index}>{role.name}{index !== user.roles.length - 1 ? ', ' : ''}</span>))}
+                                                <span
+                                                    key={index}>{role.name}{index !== user.roles.length - 1 ? ', ' : ''}</span>))}
                                         </h6>
 
                                     </div>
@@ -273,8 +263,16 @@ export default function Home() {
                                     <div className="flip-card-back">
                                         <div className="text-left ml-3 mt-3">
 
-                                            <p className="reduceFontSize mb-0"><span
-                                                className="yellowWordColor">@Entity</span></p>
+
+                                            <p className="reduceFontSize mb-0 ">
+                                                <span
+                                                    className="yellowWordColor">@Entity
+                                                 </span>
+
+                                                <span className="customInfoIcon"> <IoIosInformationCircle/></span>
+
+
+                                            </p>
 
                                             <p className="reduceFontSize mb-0">
                                                 <span className="yellowWordColor">
@@ -364,13 +362,13 @@ export default function Home() {
                                             <p className="reduceFontSize mb-2 ml-4"><span
                                                 className="orangeWordColor">private</span> Set{'<RoleEntity>'} <span
                                                 className="pinkWordColor">roles</span>;
-                                            </p>
 
-                                            {isAdministrator() && !user.roles.some(role => role.name === "ADMIN") &&
-                                                <button className="customBin"
-                                                        onClick={() => handleDeleteUser(user)}><FaTrashAlt/>
-                                                </button>
-                                            }
+                                                {isAdministrator() && !user.roles.some(role => role.name === "ADMIN") &&
+                                                    <button className="customBin"
+                                                            onClick={() => handleDeleteUser(user)}><FaTrashAlt/>
+                                                    </button>
+                                                }
+                                            </p>
 
                                             <p className="reduceFontSize ml-1 mb-2 ">{'}'}</p>
                                         </div>
@@ -402,22 +400,36 @@ export default function Home() {
 
             <Modal show={showSearchModal} onHide={handleSearchModalClose}>
                 <Modal.Header>
-                    <Modal.Title>Search by Last Name</Modal.Title>
+                    <Modal.Title>Search Users</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <label htmlFor="lastNameInput">Enter Last Name:</label>
+                    <label htmlFor="searchOptionSelect">Select Search Option:</label>
+                    <select
+
+                        id="searchOptionSelect"
+                        className="form-control mb-3"
+                        value={selectedSearchOption}
+                        onChange={(e) => setSelectedSearchOption(e.target.value)}
+                    >
+                        <option value="firstName">First Name</option>
+                        <option value="lastName">Last Name</option>
+                        <option value="phoneNumber">Phone Number</option>
+                        <option value="email">Email</option>
+                    </select>
+
+                    <label htmlFor="searchInput">Search: </label>
                     <input
                         type="text"
-                        id="lastNameInput"
+                        id="searchInput"
                         className="form-control"
                         value={searchTerm}
                         onChange={handleSearchInputChange}
                     />
                 </Modal.Body>
+
                 {searchError && <p className="text-danger text-center font-weight-bolder">{searchError}</p>}
 
                 <Modal.Footer className="justify-content-center">
-
                     <Button variant="secondary" onClick={handleSearchModalClose}>
                         Cancel
                     </Button>
