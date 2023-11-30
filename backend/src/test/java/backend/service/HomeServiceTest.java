@@ -1,12 +1,11 @@
 package backend.service;
 
+import backend.dto.AuthResponseDTO;
+import backend.dto.EditDetailsDTO;
 import backend.dto.UserDetailsDTO;
 import backend.entity.RoleEntity;
 import backend.entity.UserEntity;
-import backend.exception.AccessDeniedException;
-import backend.exception.DataValidationException;
-import backend.exception.MissingParameterException;
-import backend.exception.ResourceNotFoundException;
+import backend.exception.*;
 import backend.repository.UserEntityRepository;
 import backend.util.ValidateData;
 import backend.util.ValidationUtil;
@@ -14,19 +13,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static backend.constants.ActionConst.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -38,6 +39,9 @@ public class HomeServiceTest {
 
     @Mock
     private ValidationUtil validationUtil;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @Mock
     private UserEntityRepository userEntityRepository;
@@ -111,7 +115,6 @@ public class HomeServiceTest {
         verify(modelMapper, times(1)).map(any(), eq(UserDetailsDTO.class));
         verify(validationUtil).isValid(any());
     }
-
 
     @Test
     void testGetSelectedUser_ValidUserDetails_ReturnsUserDetailsDTO() {
@@ -212,7 +215,6 @@ public class HomeServiceTest {
         verify(validationUtil, times(2)).isValid(any());
     }
 
-
     @Test
     void testGetAllUsersByParameter_InvalidSearchOption_ThrowsMissingParameterException() {
         String email = "test@example.com";
@@ -279,7 +281,6 @@ public class HomeServiceTest {
         verify(validationUtil, times(1)).isValid(any());
     }
 
-
     @Test
     void testGetAllUsersByParameter_EmailSearch() {
         String email = "test@example.com";
@@ -306,7 +307,6 @@ public class HomeServiceTest {
         verify(modelMapper, times(1)).map(any(), eq(UserDetailsDTO.class));
         verify(validationUtil, times(1)).isValid(any());
     }
-
 
     private UserEntity createUser(String firstName, String lastName) {
         UserEntity userEntity = new UserEntity();
@@ -416,39 +416,88 @@ public class HomeServiceTest {
     }
 
     @Test
-    void testChangePhoneNumber_ValidCredentials_UserPhoneNumberChanged() {
-        String email = "test@example.com";
-        String password = "password";
-        String emailUserToChange = "userToChange@example.com";
-        String newPhoneNumber = "1234567890";
+    void testUpdateUserData() {
+        UserEntity userToBeEdited = new UserEntity();
+        EditDetailsDTO newUserDataObject = new EditDetailsDTO();
+        newUserDataObject.setFirstName("John");
+        newUserDataObject.setLastName("Doe");
+        newUserDataObject.setEmail("john.doe@example.com");
+        newUserDataObject.setPhoneNumber("1234567890");
+        newUserDataObject.setPassword("newPassword");
 
-        UserEntity mockedUserEntity = new UserEntity();
-        when(validateData.validateUserWithPassword(email, password)).thenReturn(mockedUserEntity);
-        when(userEntityRepository.findByEmail(emailUserToChange)).thenReturn(mockedUserEntity);
+        UserEntity result = homeService.updateUserData(userToBeEdited, newUserDataObject);
 
-        homeService.changePhoneNumber(email, password, emailUserToChange, newPhoneNumber);
-
-        verify(validateData, times(1)).validateUserWithPassword(email, password);
-        verify(userEntityRepository, times(1)).findByEmail(emailUserToChange);
-        verify(userEntityRepository, times(1)).save(any());
+        assertEquals("John", result.getFirstName());
+        assertEquals("Doe", result.getLastName());
+        assertEquals("john.doe@example.com", result.getEmail());
+        assertEquals("1234567890", result.getPhoneNumber());
+        verify(passwordEncoder).encode("newPassword");
     }
 
     @Test
-    void testChangePhoneNumber_UserNotFound_ThrowsResourceNotFoundException() {
+    void testUpdateFieldIfNotEmpty() {
+        String newValue = "John";
+        Consumer<String> fieldUpdater = mock(Consumer.class);
+
+        homeService.updateFieldIfNotEmpty(newValue, fieldUpdater);
+
+        verify(fieldUpdater).accept(newValue);
+    }
+
+    @Test
+    void testEditUserDetails_EmailAlreadyExists_ThrowsResourceAlreadyExistsException() {
+        String email = "test@example.com";
+        String password = "password";
+        String emailUserToChange = "user@example.com";
+        EditDetailsDTO newUserDataObject = new EditDetailsDTO();
+        newUserDataObject.setEmail("new@example.com");
+
+        UserEntity loggedUser = new UserEntity();
+        loggedUser.setEmail(email);
+
+        UserEntity userToBeEdited = new UserEntity();
+        userToBeEdited.setEmail(emailUserToChange);
+
+        when(validateData.validateUserWithPassword(email, password)).thenReturn(loggedUser);
+        when(userEntityRepository.findByEmail(emailUserToChange)).thenReturn(userToBeEdited);
+        when(userEntityRepository.existsByEmail(newUserDataObject.getEmail())).thenReturn(true);
+
+        assertThrows(ResourceAlreadyExistsException.class,
+                () -> homeService.editUserDetails(email, password, emailUserToChange, newUserDataObject));
+    }
+
+    @Test
+    void testEditUserDetails_UserNotFound_ThrowsResourceNotFoundException() {
         String email = "test@example.com";
         String password = "password";
         String emailUserToChange = "nonExistingUser@example.com";
-        String newPhoneNumber = "1234567890";
+        EditDetailsDTO newUserDataObject = new EditDetailsDTO();
 
         when(validateData.validateUserWithPassword(email, password)).thenReturn(new UserEntity());
         when(userEntityRepository.findByEmail(emailUserToChange)).thenReturn(null);
 
         assertThrows(ResourceNotFoundException.class,
-                () -> homeService.changePhoneNumber(email, password, emailUserToChange, newPhoneNumber));
+                () -> homeService.editUserDetails(email, password, emailUserToChange, newUserDataObject));
+    }
 
-        verify(validateData, times(1)).validateUserWithPassword(email, password);
-        verify(userEntityRepository, times(1)).findByEmail(emailUserToChange);
-        verify(userEntityRepository, never()).save(any());
+    @Test
+    void testEditUserDetails_AccessDenied_ThrowsAccessDeniedException() {
+        String email = "test@example.com";
+        String password = "password";
+        String emailUserToChange = "otherUser@example.com";
+        EditDetailsDTO newUserDataObject = new EditDetailsDTO();
+
+        UserEntity loggedUser = new UserEntity();
+        loggedUser.setEmail(email);
+
+        UserEntity userToBeEdited = new UserEntity();
+        userToBeEdited.setEmail(emailUserToChange);
+
+        when(validateData.validateUserWithPassword(email, password)).thenReturn(loggedUser);
+        when(userEntityRepository.findByEmail(emailUserToChange)).thenReturn(userToBeEdited);
+
+        assertThrows(AccessDeniedException.class,
+                () -> homeService.editUserDetails(email, password, emailUserToChange, newUserDataObject));
     }
 
 }

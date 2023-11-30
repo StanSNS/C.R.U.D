@@ -1,20 +1,22 @@
 package backend.service;
 
+import backend.dto.AuthResponseDTO;
+import backend.dto.EditDetailsDTO;
 import backend.dto.UserDetailsDTO;
+import backend.entity.RoleEntity;
 import backend.entity.UserEntity;
-import backend.exception.AccessDeniedException;
-import backend.exception.DataValidationException;
-import backend.exception.MissingParameterException;
-import backend.exception.ResourceNotFoundException;
+import backend.exception.*;
 import backend.repository.UserEntityRepository;
 import backend.util.ValidateData;
 import backend.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static backend.constants.ActionConst.*;
@@ -30,6 +32,7 @@ public class HomeService {
     private final UserEntityRepository userEntityRepository;
     private final ModelMapper modelMapper;
     private final ValidationUtil validationUtil;
+    private final PasswordEncoder passwordEncoder;
 
 
     /**
@@ -80,16 +83,15 @@ public class HomeService {
     }
 
 
-
     /**
      * Retrieves details of a selected user based on the provided email and password.
      *
-     * @param email              The email of the user making the request.
-     * @param password           The password of the user making the request.
-     * @param selectedUserEmail  The email of the user for whom details are to be retrieved.
+     * @param email             The email of the user making the request.
+     * @param password          The password of the user making the request.
+     * @param selectedUserEmail The email of the user for whom details are to be retrieved.
      * @return UserDetailsDTO    Details of the selected user.
-     * @throws ResourceNotFoundException    If the user with the specified email is not found.
-     * @throws DataValidationException       If the retrieved user details are not valid.
+     * @throws ResourceNotFoundException If the user with the specified email is not found.
+     * @throws DataValidationException   If the retrieved user details are not valid.
      */
     public UserDetailsDTO getSelectedUser(String email, String password, String selectedUserEmail) {
         validateData.validateUserWithPassword(email, password);
@@ -221,23 +223,90 @@ public class HomeService {
 
 
     /**
-     * Changes the phone number of a user.
+     * Edits user details based on the provided email, password, and user email to change.
      *
-     * @param email             The email of the user initiating the change.
-     * @param password          The password of the user initiating the change.
-     * @param emailUserToChange The email of the user whose phone number is to be changed.
-     * @param phoneNumber       The new phone number to be set for the user.
-     * @throws ResourceNotFoundException If the user with the specified emailUserToChange is not found.
+     * @param email              The email of the user initiating the edit (for authentication).
+     * @param password           The password of the user initiating the edit (for authentication).
+     * @param emailUserToChange  The email of the user whose details are to be edited.
+     * @param newUserDataObject  The request body containing the new user data.
+     * @return AuthResponseDTO   A response DTO containing the updated user details.
+     * @throws ResourceNotFoundException If the user to be edited is not found.
+     * @throws ResourceAlreadyExistsException If the new email already exists in the system.
+     * @throws AccessDeniedException If the requesting user does not have permission to edit the specified user.
      */
-    public void changePhoneNumber(String email, String password, String emailUserToChange, String phoneNumber) {
-        validateData.validateUserWithPassword(email, password);
+    public AuthResponseDTO editUserDetails(String email, String password, String emailUserToChange, EditDetailsDTO newUserDataObject) {
+        UserEntity loggedUser = validateData.validateUserWithPassword(email, password);
 
-        UserEntity userEntity = userEntityRepository.findByEmail(emailUserToChange);
+        UserEntity userToBeEdited = userEntityRepository.findByEmail(emailUserToChange);
 
-        if (userEntity == null) {
+        if (userEntityRepository.existsByEmail(newUserDataObject.getEmail())) {
+            throw new ResourceAlreadyExistsException();
+        }
+
+        if (userToBeEdited == null) {
             throw new ResourceNotFoundException();
         }
-        userEntity.setPhoneNumber(phoneNumber);
-        userEntityRepository.save(userEntity);
+
+        if (!loggedUser.getEmail().equals(userToBeEdited.getEmail())) {
+            throw new AccessDeniedException();
+        }
+
+        UserEntity savedUserEntity = updateUserData(userToBeEdited, newUserDataObject);
+
+        userEntityRepository.save(savedUserEntity);
+
+        AuthResponseDTO authResponseDTO = new AuthResponseDTO();
+
+        if (!newUserDataObject.getEmail().trim().isEmpty()) {
+            authResponseDTO.setEmail(newUserDataObject.getEmail());
+        }
+
+        if (!newUserDataObject.getPassword().trim().isEmpty()) {
+            authResponseDTO.setPassword(newUserDataObject.getPassword());
+        }
+
+        if (!newUserDataObject.getFirstName().trim().isEmpty()) {
+            authResponseDTO.setFirstName(newUserDataObject.getFirstName());
+        }
+
+        authResponseDTO.setRoles(savedUserEntity
+                .getRoles()
+                .stream()
+                .map(RoleEntity::getName)
+                .collect(Collectors.toSet()));
+
+        return authResponseDTO;
+
     }
+
+    /**
+     * Updates the user data based on the provided EditDetailsDTO.
+     *
+     * @param userToBeEdited      The UserEntity object to be updated.
+     * @param newUserDataObject   The EditDetailsDTO containing the new user data.
+     * @return UserEntity         The updated UserEntity object.
+     */
+    UserEntity updateUserData(UserEntity userToBeEdited, EditDetailsDTO newUserDataObject) {
+        updateFieldIfNotEmpty(newUserDataObject.getFirstName(), userToBeEdited::setFirstName);
+        updateFieldIfNotEmpty(newUserDataObject.getLastName(), userToBeEdited::setLastName);
+        updateFieldIfNotEmpty(newUserDataObject.getEmail(), userToBeEdited::setEmail);
+        updateFieldIfNotEmpty(newUserDataObject.getPhoneNumber(), userToBeEdited::setPhoneNumber);
+        updateFieldIfNotEmpty(newUserDataObject.getPassword(), password -> userToBeEdited.setPassword(passwordEncoder.encode(password)));
+
+        return userToBeEdited;
+
+    }
+
+    /**
+     * Updates a user field if the provided new value is not empty.
+     *
+     * @param newValue      The new value to be set.
+     * @param fieldUpdater  A Consumer function to update the field with the new value.
+     */
+    void updateFieldIfNotEmpty(String newValue, Consumer<String> fieldUpdater) {
+        if (!newValue.trim().isEmpty()) {
+            fieldUpdater.accept(newValue);
+        }
+    }
+
 }

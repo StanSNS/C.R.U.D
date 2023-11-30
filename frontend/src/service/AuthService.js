@@ -37,6 +37,26 @@ export const saveLoggedUser = (email, password, roles, firstName) => {
     sessionStorage.setItem("First Name", encryptData(firstName));
 }
 
+// Save user information securely in session storage after user details change.
+export const updateLoggedUserDetails = (email, password, roles, firstName) => {
+
+    if (email) {
+        sessionStorage.setItem("Email", encryptData(email));
+    }
+
+    if (password) {
+        sessionStorage.setItem("Password", encryptData(password));
+    }
+
+    if (roles) {
+        sessionStorage.setItem("Roles", encryptData(roles));
+    }
+
+    if (firstName) {
+        sessionStorage.setItem("First Name", encryptData(firstName));
+    }
+}
+
 
 // Function to retrieve the logged-in user's first name from session storage and decrypt it.
 export const loggedUserFirstName = () => {

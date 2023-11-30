@@ -72,15 +72,14 @@ export const deleteUser = (email, password, userToDeleteEmail) => {
 };
 
 
-// Function to change a user's phone number
-export const changeUserPhoneNumber = (email, password, emailUserToChange, phoneNumberToChange) => {
-    const url = `http://localhost:8000/home?email=${email}&password=${password}&emailUserToChange=${emailUserToChange}&phoneNumberToChange=${phoneNumberToChange}`;
-    return axios.patch(url)
+// Function to change a user details
+export const changeUserDetails = (email, password, emailUserToChange, newUserDataObject) => {
+    return axios.put(`http://localhost:8000/home?email=${email}&password=${password}&emailUserToChange=${emailUserToChange}`,newUserDataObject)
         .then((response) => {
             if (response.status === 200) {
                 return response.data;
             } else {
-                throw new Error('Failed to change user phone number');
+                throw new Error('Failed to change user details');
             }
         }).catch((error) => {
             throw error;

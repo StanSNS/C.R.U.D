@@ -130,3 +130,8 @@
 .customWidth{
     width: 95%;
 }
+
+.errorIcon{
+    scale: 6;
+    color: red;
+}

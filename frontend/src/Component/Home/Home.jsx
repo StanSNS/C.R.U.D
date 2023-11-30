@@ -2,14 +2,21 @@ import React, {useEffect, useState} from "react";
 import "./Home.css"
 import {useNavigate} from "react-router-dom";
 import {
-    changeUserPhoneNumber,
+    changeUserDetails,
     deleteUser,
     getAllUsersDefault,
     getAllUsersSearch,
-    getAllUsersSortedByLastNameAndDOB, getSelectedUserInfo,
+    getAllUsersSortedByLastNameAndDOB,
+    getSelectedUserInfo,
     logoutUser
 } from "../../service/HomeService";
-import {isAdministrator, loggedUserEmail, loggedUserFirstName, loggedUserPassword} from "../../service/AuthService";
+import {
+    isAdministrator,
+    loggedUserEmail,
+    loggedUserFirstName,
+    loggedUserPassword,
+    updateLoggedUserDetails
+} from "../../service/AuthService";
 import {Button, Modal} from "react-bootstrap";
 import {MdOutlineDangerous} from "react-icons/md";
 
@@ -22,13 +29,20 @@ export default function Home() {
     const [showSearchModal, setShowSearchModal] = useState(false); // State variable to control the visibility of the search modal
     const [searchTerm, setSearchTerm] = useState(""); // New state for the search term
     const [searchError, setSearchError] = useState(""); // New state for search error
-    const [showEditModal, setShowEditModal] = useState(false); // State variable to control the visibility of the edit user modal
+    const [showEditModal, setShowEditUserModal] = useState(false); // State variable to control the visibility of the edit user modal
     const [editedUser, setEditedUser] = useState(null); // State variable to store information about the user being edited
-    const [newPhoneNumber, setNewPhoneNumber] = useState(""); // State variable to store the new phone number input in the edit user modal
-    const [phoneNumberError, setPhoneNumberError] = useState(""); // New state for phone number error
+    const [userEditError, setUserEditError] = useState(""); // New state for phone number error
     const [selectedSearchOption, setSelectedSearchOption] = useState("lastName"); // New state to store the selected option
-    const [selectedUserInfo, setSelectedUserInfo] = useState(null);// New state variable to store the selected user information for displaying in the moda
+    const [selectedUserInfo, setSelectedUserInfo] = useState(null);// New state variable to store the selected user information for displaying in the modal
     const [showUserInfoModal, setShowUserInfoModal] = useState(false);// New state variable to control the visibility of the user info modal
+    const [newUserData, setNewUserData] = useState(null); // State to store new user data, initialized as null
+    const [editedUserFirstName, setEditedUserFirstName] = useState(""); // State to store the edited first name of a user
+    const [editedUserLastName, setEditedUserLastName] = useState("");// State to store the edited last name of a user
+    const [editedUserEmail, setEditedUserEmail] = useState("");// State to store the edited email of a user
+    const [editedUserPhoneNumber, setEditedUserPhoneNumber] = useState("");// State to store the edited phone number of a user
+    const [editedUserPassword, setEditedUserPassword] = useState("");// State to store the edited password of a user
+    const [editedUserConfirmPassword, setEditedUserConfirmPassword] = useState("");// State to store the edited confirmed password of a user
+    const [userToEditEmail, setUserToEditEmail] = useState("");// State to store the email of the user to be edited
 
 
     // Function that handles the logout button click event.
@@ -145,39 +159,68 @@ export default function Home() {
 
     // Close the edit modal and reset related state variables
     const closeEditModal = () => {
-        setShowEditModal(false);
+        setShowEditUserModal(false);
         setEditedUser(null);
-        setNewPhoneNumber("");
-        setPhoneNumberError("")
+        setNewUserData(null);
+        setUserEditError("");
+        setEditedUserFirstName("");
+        setEditedUserLastName("");
+        setEditedUserEmail("");
+        setEditedUserPhoneNumber("");
+        setEditedUserPassword("");
+        setEditedUserConfirmPassword("");
+        setUserToEditEmail("")
     };
 
     // Handle the click event for editing a user
     const handleEditUser = (user) => {
+        setShowEditUserModal(true);
         setEditedUser(user);
-        setNewPhoneNumber(user.phoneNumber);
-        setShowEditModal(true);
     };
 
     // Confirm the edit of a user and close the edit modal
     const confirmEditUser = () => {
-        if (newPhoneNumber.trim() === "") {
-            setPhoneNumberError("Please enter a phone number!");
-        } else {
-            changeUserPhoneNumber(loggedUserEmail(), loggedUserPassword(), editedUser.email, newPhoneNumber)
-                .then(() => {
-                    setUsers((prevUsers) =>
-                        prevUsers.map((user) =>
-                            user === editedUser
-                                ? {...user, phoneNumber: newPhoneNumber}
-                                : user
-                        )
-                    );
-                    closeEditModal();
-                }).catch((error) => {
-                setPhoneNumberError("An error occurred !");
-                console.error("Error changing user phone number: ", error);
-            });
+        setNewUserData(constructEditedUserData());
+        setUserToEditEmail(editedUser.email)
+    };
+
+    // useEffect to handle user data updates when newUserData changes or any of the dependencies change
+    useEffect(() => {
+        if (newUserData) {
+            if (!editedUserFirstName && !editedUserLastName && !editedUserPhoneNumber && !editedUserPassword && !editedUserEmail) {
+                setUserEditError("Please fill at least one field!");
+                setNewUserData(null)
+            } else if (editedUserEmail && !editedUserEmail.includes("@")) {
+                setUserEditError("Please enter a valid email address.");
+                setNewUserData(null)
+            } else if (editedUserPassword !== editedUserConfirmPassword) {
+                setUserEditError("Passwords do not match.");
+                setNewUserData(null)
+            } else {
+                setUserEditError("");
+                changeUserDetails(loggedUserEmail(), loggedUserPassword(), userToEditEmail, newUserData)
+                    .then((data) => {
+                        updateLoggedUserDetails(data.email, data.password, data.roles, data.firstName)
+                        handleDefaultSort()
+                        closeEditModal();
+                    })
+                    .catch((error) => {
+                        setUserEditError("An error occurred trying to edit the user details!");
+                        console.error("Error changing user details: ", error);
+                    });
+            }
         }
+    }, [userToEditEmail, editedUserConfirmPassword, editedUserEmail, editedUserFirstName, editedUserLastName, editedUserPassword, editedUserPhoneNumber, newUserData]);
+
+    // Function to construct an object from edited user fields
+    const constructEditedUserData = () => {
+        return {
+            firstName: editedUserFirstName,
+            lastName: editedUserLastName,
+            email: editedUserEmail,
+            phoneNumber: editedUserPhoneNumber,
+            password: editedUserPassword,
+        };
     };
 
     // Function to handle the "Show info" button click event
@@ -263,10 +306,11 @@ export default function Home() {
                                     <div className="flip-card-back">
                                         <div className="customMarginTop">
 
-                                            <button className="btn btn-warning customWidth"
-                                                    onClick={() => handleEditUser(user)}>Edit User
-                                            </button>
-
+                                            {user.email === loggedUserEmail() &&
+                                                <button className="btn btn-warning customWidth"
+                                                        onClick={() => handleEditUser(user)}>Edit User
+                                                </button>
+                                            }
                                             <button className="btn btn-primary customWidth mt-3"
                                                     onClick={() => handleShowInfo(user)}>
                                                 Show info
@@ -347,20 +391,70 @@ export default function Home() {
 
             <Modal show={showEditModal} onHide={closeEditModal}>
                 <Modal.Header>
-                    <Modal.Title>Edit Phone Number</Modal.Title>
+                    <Modal.Title>Edit User Details:</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <label htmlFor="phoneNumberInput">Enter New Phone Number:</label>
+                    <label htmlFor="firstNameInput">Change Your First Name</label>
+                    <input
+                        type="text"
+                        id="firstNameInput"
+                        className="form-control"
+                        value={editedUserFirstName}
+                        placeholder={`Your current first name is: ${editedUser?.firstName || ''}`}
+                        onChange={(e) => setEditedUserFirstName(e.target.value)}
+                    />
+
+                    <label htmlFor="lastNameInput" className="mt-3">Change Your Last Name</label>
+                    <input
+                        type="text"
+                        id="lastNameInput"
+                        className="form-control"
+                        value={editedUserLastName}
+                        placeholder={`Your current last name is: ${editedUser?.lastName || ''}`}
+                        onChange={(e) => setEditedUserLastName(e.target.value)}
+                    />
+
+                    <label htmlFor="emailInput" className="mt-3">Change Your Email</label>
+                    <input
+                        type="text"
+                        id="emailInput"
+                        className="form-control"
+                        value={editedUserEmail}
+                        placeholder={`Your current email is: ${editedUser?.email || ''}`}
+                        onChange={(e) => setEditedUserEmail(e.target.value)}
+                    />
+
+                    <label htmlFor="phoneNumberInput" className="mt-3">Change Your Phone Number</label>
                     <input
                         type="text"
                         id="phoneNumberInput"
                         className="form-control"
-                        value={newPhoneNumber}
-                        onChange={(e) => setNewPhoneNumber(e.target.value)}
+                        value={editedUserPhoneNumber}
+                        placeholder={`Your current phone number is: ${editedUser?.phoneNumber || ''}`}
+                        onChange={(e) => setEditedUserPhoneNumber(e.target.value)}
                     />
+
+                    <label htmlFor="passwordInput" className="mt-3">Change Your Password</label>
+                    <input
+                        type="password"
+                        id="passwordInput"
+                        className="form-control"
+                        value={editedUserPassword}
+                        onChange={(e) => setEditedUserPassword(e.target.value)}
+                    />
+
+                    <label htmlFor="passwordInputConfirm" className="mt-3">Please confirm your password!</label>
+                    <input
+                        type="password"
+                        id="passwordInputConfirm"
+                        className="form-control"
+                        value={editedUserConfirmPassword}
+                        onChange={(e) => setEditedUserConfirmPassword(e.target.value)}
+                    />
+
                 </Modal.Body>
-                {phoneNumberError && (
-                    <p className="text-danger text-center font-weight-bolder">{phoneNumberError}</p>
+                {userEditError && (
+                    <p className="text-danger text-center font-weight-bolder">{userEditError}</p>
                 )}
                 <Modal.Footer className="justify-content-center">
                     <Button variant="secondary" onClick={closeEditModal}>
