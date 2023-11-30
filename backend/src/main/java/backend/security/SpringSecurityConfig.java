@@ -53,12 +53,36 @@ public class SpringSecurityConfig implements WebMvcConfigurer {
                     "/auth/register",
                     "/home"
             ).permitAll();
+            authorize.requestMatchers(AUTH_SWAGGER_WHITELIST).permitAll();
             authorize.anyRequest().authenticated();
         });
         http.httpBasic(Customizer.withDefaults());
         http.exceptionHandling(exception -> exception.authenticationEntryPoint(authenticationEntryPoint));
         return http.build();
     }
+
+
+    /**
+     * Whitelist of URL patterns for which authentication is not required. Requests to these endpoints are allowed without
+     * authentication, and they typically include authentication-related endpoints and Swagger API documentation.
+     *
+     * <p>The URLs in this whitelist are:</p>
+     * <ul>
+     *     <li>{@code "/api/v1/auth/**"}: Endpoints related to authentication.</li>
+     *     <li>{@code "/v3/api-docs/**"}: Swagger API documentation JSON endpoint.</li>
+     *     <li>{@code "/v3/api-docs.yaml"}: Swagger API documentation YAML endpoint.</li>
+     *     <li>{@code "/swagger-ui/**"}: Swagger UI resources.</li>
+     *     <li>{@code "/swagger-ui.html"}: Swagger UI HTML page.</li>
+     * </ul>
+     */
+    private final String[] AUTH_SWAGGER_WHITELIST = {
+            "/api/v1/auth/**",
+            "/v3/api-docs/**",
+            "/v3/api-docs.yaml",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+    };
+
 
     /**
      * Creates an AuthenticationManager using the provided AuthenticationConfiguration.
@@ -71,6 +95,5 @@ public class SpringSecurityConfig implements WebMvcConfigurer {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
-
 
 }
