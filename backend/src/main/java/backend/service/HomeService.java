@@ -11,6 +11,8 @@ import backend.util.ValidateData;
 import backend.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,50 +38,57 @@ public class HomeService {
 
 
     /**
-     * Retrieves all users by default.
+     * Retrieves a page of users with default sorting.
      *
-     * @param email    Email of the user for authentication.
-     * @param password Password of the user for authentication.
-     * @return List<UserDetailsDTO> A list of UserDetailsDTO representing all users.
+     * @param email    The email for user validation.
+     * @param password The password for user validation.
+     * @param page     The page number to retrieve.
+     * @param size     The number of items per page.
+     * @return Page<UserDetailsDTO> A page of user details.
+     * @throws DataValidationException If user data validation fails.
      */
-    public List<UserDetailsDTO> getAllUsersByDefault(String email, String password) {
+    public Page<UserDetailsDTO> getAllUsersByDefault(String email, String password, Integer page, Integer size) {
         validateData.validateUserWithPassword(email, password);
 
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+
         return userEntityRepository
-                .findAll()
-                .stream()
+                .findAll(pageRequest)
                 .map(user -> {
                     UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
                     if (!validationUtil.isValid(userDetailsDTO)) {
                         throw new DataValidationException();
                     }
                     return userDetailsDTO;
-                })
-                .collect(Collectors.toList());
+                });
     }
 
 
     /**
-     * Retrieves all users ordered by last name and date of birth.
+     * Retrieves a page of users ordered by last name and date of birth.
      *
-     * @param email    Email of the user for authentication.
-     * @param password Password of the user for authentication.
-     * @return List<UserDetailsDTO> A list of UserDetailsDTO representing all users ordered by last name and date of birth.
+     * @param email    The email for user validation.
+     * @param password The password for user validation.
+     * @param page     The page number to retrieve.
+     * @param size     The number of items per page.
+     * @return Page<UserDetailsDTO> A page of user details.
+     * @throws DataValidationException If user data validation fails.
      */
-    public List<UserDetailsDTO> getAllUsersOrderedByLastNameAndDateOfBirth(String email, String password) {
+    public Page<UserDetailsDTO> getAllUsersOrderedByLastNameAndDateOfBirth(String email, String password, Integer page, Integer size) {
         validateData.validateUserWithPassword(email, password);
 
+        PageRequest pageRequest = PageRequest.of(page, size);
+
         return userEntityRepository
-                .findAllUsersOrderedByLastNameAndDateOfBirth()
-                .stream()
+                .findAllUsersOrderedByLastNameAndDateOfBirth(pageRequest)
                 .map(user -> {
                     UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
                     if (!validationUtil.isValid(userDetailsDTO)) {
                         throw new DataValidationException();
                     }
                     return userDetailsDTO;
-                })
-                .collect(Collectors.toList());
+                });
     }
 
 
@@ -111,22 +120,27 @@ public class HomeService {
 
 
     /**
-     * Retrieves all users with a given last name.
+     * Retrieves a page of users based on the specified search parameters.
      *
-     * @param email                Email of the user for authentication.
-     * @param password             Password of the user for authentication.
-     * @param searchTerm           The provided value from the input;
-     * @param selectedSearchOption The selected option from the field
-     * @return List<UserDetailsDTO> A list of UserDetailsDTO representing users with the specified last name.
+     * @param email                The email for user validation.
+     * @param password             The password for user validation.
+     * @param searchTerm           The term to search for.
+     * @param selectedSearchOption The option selected for searching (e.g., by first name, last name, etc.).
+     * @param page                 The page number to retrieve.
+     * @param size                 The number of items per page.
+     * @return Page<UserDetailsDTO> A page of user details based on the search criteria.
+     * @throws DataValidationException   If user data validation fails.
+     * @throws MissingParameterException If required parameters are missing.
      */
-    public List<UserDetailsDTO> getAllUsersByParameter(String email, String password, String searchTerm, String selectedSearchOption) {
+    public Page<UserDetailsDTO> getAllUsersByParameter(String email, String password, String searchTerm, String selectedSearchOption, Integer page, Integer size) {
         validateData.validateUserWithPassword(email, password);
+
+        PageRequest pageRequest = PageRequest.of(page, size);
 
         switch (selectedSearchOption) {
             case SEARCH_USERS_BY_FIRST_NAME -> {
                 return userEntityRepository
-                        .findAllByFirstName(searchTerm)
-                        .stream()
+                        .findAllByFirstName(searchTerm, pageRequest)
                         .map(user -> {
                                     UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
                                     if (!validationUtil.isValid(userDetailsDTO)) {
@@ -134,12 +148,12 @@ public class HomeService {
                                     }
                                     return userDetailsDTO;
                                 }
-                        ).collect(Collectors.toList());
+                        );
             }
             case SEARCH_USERS_BY_LAST_NAME -> {
+
                 return userEntityRepository
-                        .findAllByLastName(searchTerm)
-                        .stream()
+                        .findAllByLastName(searchTerm, pageRequest)
                         .map(user -> {
                                     UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
                                     if (!validationUtil.isValid(userDetailsDTO)) {
@@ -147,7 +161,7 @@ public class HomeService {
                                     }
                                     return userDetailsDTO;
                                 }
-                        ).collect(Collectors.toList());
+                        );
             }
             case SEARCH_USERS_BY_PHONE_NUMBER -> {
                 if (searchTerm.contains("%20")) {
@@ -155,8 +169,7 @@ public class HomeService {
                 }
 
                 return userEntityRepository
-                        .findAllByPhoneNumber(searchTerm)
-                        .stream()
+                        .findAllByPhoneNumber(searchTerm, pageRequest)
                         .map(user -> {
                                     UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
                                     if (!validationUtil.isValid(userDetailsDTO)) {
@@ -164,12 +177,11 @@ public class HomeService {
                                     }
                                     return userDetailsDTO;
                                 }
-                        ).collect(Collectors.toList());
+                        );
             }
             case SEARCH_USERS_BY_EMAIL -> {
                 return userEntityRepository
-                        .findAllByEmail(searchTerm)
-                        .stream()
+                        .findAllByEmail(searchTerm, pageRequest)
                         .map(user -> {
                                     UserDetailsDTO userDetailsDTO = modelMapper.map(user, UserDetailsDTO.class);
                                     if (!validationUtil.isValid(userDetailsDTO)) {
@@ -177,7 +189,7 @@ public class HomeService {
                                     }
                                     return userDetailsDTO;
                                 }
-                        ).collect(Collectors.toList());
+                        );
             }
         }
 
@@ -225,14 +237,14 @@ public class HomeService {
     /**
      * Edits user details based on the provided email, password, and user email to change.
      *
-     * @param email              The email of the user initiating the edit (for authentication).
-     * @param password           The password of the user initiating the edit (for authentication).
-     * @param emailUserToChange  The email of the user whose details are to be edited.
-     * @param newUserDataObject  The request body containing the new user data.
+     * @param email             The email of the user initiating the edit (for authentication).
+     * @param password          The password of the user initiating the edit (for authentication).
+     * @param emailUserToChange The email of the user whose details are to be edited.
+     * @param newUserDataObject The request body containing the new user data.
      * @return AuthResponseDTO   A response DTO containing the updated user details.
-     * @throws ResourceNotFoundException If the user to be edited is not found.
+     * @throws ResourceNotFoundException      If the user to be edited is not found.
      * @throws ResourceAlreadyExistsException If the new email already exists in the system.
-     * @throws AccessDeniedException If the requesting user does not have permission to edit the specified user.
+     * @throws AccessDeniedException          If the requesting user does not have permission to edit the specified user.
      */
     public AuthResponseDTO editUserDetails(String email, String password, String emailUserToChange, EditDetailsDTO newUserDataObject) {
         UserEntity loggedUser = validateData.validateUserWithPassword(email, password);
@@ -276,14 +288,13 @@ public class HomeService {
                 .collect(Collectors.toSet()));
 
         return authResponseDTO;
-
     }
 
     /**
      * Updates the user data based on the provided EditDetailsDTO.
      *
-     * @param userToBeEdited      The UserEntity object to be updated.
-     * @param newUserDataObject   The EditDetailsDTO containing the new user data.
+     * @param userToBeEdited    The UserEntity object to be updated.
+     * @param newUserDataObject The EditDetailsDTO containing the new user data.
      * @return UserEntity         The updated UserEntity object.
      */
     UserEntity updateUserData(UserEntity userToBeEdited, EditDetailsDTO newUserDataObject) {
@@ -300,8 +311,8 @@ public class HomeService {
     /**
      * Updates a user field if the provided new value is not empty.
      *
-     * @param newValue      The new value to be set.
-     * @param fieldUpdater  A Consumer function to update the field with the new value.
+     * @param newValue     The new value to be set.
+     * @param fieldUpdater A Consumer function to update the field with the new value.
      */
     void updateFieldIfNotEmpty(String newValue, Consumer<String> fieldUpdater) {
         if (!newValue.trim().isEmpty()) {

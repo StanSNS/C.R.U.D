@@ -17,7 +17,7 @@ import {
     loggedUserPassword,
     updateLoggedUserDetails
 } from "../../service/AuthService";
-import {Button, Modal} from "react-bootstrap";
+import {Button, Modal, Pagination} from "react-bootstrap";
 import {MdOutlineDangerous} from "react-icons/md";
 
 export default function Home() {
@@ -43,6 +43,13 @@ export default function Home() {
     const [editedUserPassword, setEditedUserPassword] = useState("");// State to store the edited password of a user
     const [editedUserConfirmPassword, setEditedUserConfirmPassword] = useState("");// State to store the edited confirmed password of a user
     const [userToEditEmail, setUserToEditEmail] = useState("");// State to store the email of the user to be edited
+    const [sortingOption, setSortingOption] = useState("default"); // New state for sorting option
+
+
+    // New state variable for pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const [usersPerPage] = useState(6);
 
 
     // Function that handles the logout button click event.
@@ -61,14 +68,58 @@ export default function Home() {
 
     // Effect hook to fetch all users when the component mounts.
     useEffect(() => {
-        getAllUsersDefault(loggedUserEmail(), loggedUserPassword())
-            .then((data) => {
-                setUsers(data);
-            })
-            .catch((error) => {
-                console.error("Error fetching user data: ", error);
-            });
-    }, []);
+        if (sortingOption === "default") {
+            handleDefaultSort();
+        } else if (sortingOption === "lastNameAndDOB") {
+            handleSortByLastNameAndDOB();
+        } else if (sortingOption === "searchByParameter") {
+            handleSearchByParameter()
+        }
+    }, [sortingOption]);
+
+    // Fetch users when the component mounts or when the page changes
+    useEffect(() => {
+        fetchUsers();
+    }, [currentPage]);
+
+    // Call the appropriate API based on the sorting option
+    const fetchUsers = () => {
+        if (sortingOption === "default") {
+            getAllUsersDefault(loggedUserEmail(), loggedUserPassword(), currentPage - 1, usersPerPage)
+                .then((data) => {
+                    setTotalPages(data.totalPages)
+                    setUsers(data.content);
+                })
+                .catch((error) => {
+                    console.error("Error fetching users: ", error);
+                });
+        } else if (sortingOption === "lastNameAndDOB") {
+            getAllUsersSortedByLastNameAndDOB(loggedUserEmail(), loggedUserPassword(), currentPage - 1, usersPerPage)
+                .then((data) => {
+                    setTotalPages(data.totalPages)
+                    setUsers(data.content);
+                })
+                .catch((error) => {
+                    console.error("Error fetching users: ", error);
+                });
+        } else if (sortingOption === "searchByParameter") {
+            getAllUsersSearch(loggedUserEmail(), loggedUserPassword(), searchTerm, selectedSearchOption, currentPage - 1, usersPerPage)
+                .then((data) => {
+                    setTotalPages(data.totalPages)
+                    setUsers(data.content);
+                })
+                .catch((error) => {
+                    console.error("Error fetching users: ", error);
+                });
+        }
+    };
+
+    // Update the sorting option state and reset the current page to 1
+    const handleSortingButtonClick = (sortingOption) => {
+        setSortingOption(sortingOption);
+        setCurrentPage(1);
+    };
+
 
     // Closes the modal and resets the userToDelete state.
     const closeModal = () => {
@@ -86,16 +137,8 @@ export default function Home() {
     const confirmDeleteUser = () => {
         deleteUser(loggedUserEmail(), loggedUserPassword(), userToDelete.email)
             .then(() => {
-
                 closeModal();
-
-                getAllUsersDefault(loggedUserEmail(), loggedUserPassword())
-                    .then((data) => {
-                        setUsers(data);
-                    })
-                    .catch((error) => {
-                        console.error("Error fetching user data: ", error);
-                    });
+                handleDefaultSort()
             })
             .catch((error) => {
                 console.error("Error deleting user: ", error);
@@ -105,9 +148,10 @@ export default function Home() {
 
     // Handle the click event for default sorting
     const handleDefaultSort = () => {
-        getAllUsersDefault(loggedUserEmail(), loggedUserPassword())
+        getAllUsersDefault(loggedUserEmail(), loggedUserPassword(), currentPage - 1, usersPerPage)
             .then((data) => {
-                setUsers(data)
+                console.log(data)
+                setUsers(data.content)
             }).catch((error) => {
             console.error("Error sorting users by default sorting: ", error);
         });
@@ -115,9 +159,9 @@ export default function Home() {
 
     // Handle the click event for sorting by last name and date of birth
     const handleSortByLastNameAndDOB = () => {
-        getAllUsersSortedByLastNameAndDOB(loggedUserEmail(), loggedUserPassword())
+        getAllUsersSortedByLastNameAndDOB(loggedUserEmail(), loggedUserPassword(), currentPage - 1, usersPerPage)
             .then((data) => {
-                setUsers(data)
+                setUsers(data.content)
             }).catch((error) => {
             console.error("Error sorting users by last name and date of birth: ", error);
         });
@@ -146,9 +190,10 @@ export default function Home() {
             setSearchError("Search box cannot be empty!");
         } else {
             setSearchError("");
-            getAllUsersSearch(loggedUserEmail(), loggedUserPassword(), searchTerm, selectedSearchOption)
+            getAllUsersSearch(loggedUserEmail(), loggedUserPassword(), searchTerm, selectedSearchOption, currentPage - 1, usersPerPage)
                 .then((data) => {
-                    setUsers(data)
+                    setUsers(data.content)
+                    setTotalPages(data.totalPages)
                     setSearchTerm("")
                 }).catch((error) => {
                 console.error("Error getting users by search term: ", error);
@@ -243,11 +288,15 @@ export default function Home() {
                 </div>
 
                 <div className="mt-2">
-                    <button className="sortingButton" onClick={handleDefaultSort}>Default Sort</button>
-                    <button className="sortingButton ml-3 mr-3 " onClick={handleSortByLastNameAndDOB}>Sort By Last Name
-                        and Date of Birth
+                    <button className="sortingButton" onClick={() => handleSortingButtonClick("default")}>Default Sort
                     </button>
-                    <button className="sortingButton" onClick={handleSearchByParameter}>Search by...</button>
+                    <button className="sortingButton ml-3 mr-3 "
+                            onClick={() => handleSortingButtonClick("lastNameAndDOB")}>Sort By Last Name and Date of
+                        Birth
+                    </button>
+                    <button className="sortingButton"
+                            onClick={() => handleSortingButtonClick("searchByParameter")}>Search by...
+                    </button>
                 </div>
 
                 <div className="text-right">
@@ -256,6 +305,23 @@ export default function Home() {
                     </button>
                 </div>
             </div>
+
+
+            {users.length !== 0 && (
+                <Pagination className="justify-content-center mt-5 mb-0">
+                    <Pagination.Prev disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}/>
+
+                    {Array.from({length: totalPages}, (_, index) => index + 1).map((page) => (
+                        <Pagination.Item key={page} active={page === currentPage} onClick={() => setCurrentPage(page)}>
+                            {page}
+                        </Pagination.Item>
+                    ))}
+
+                    <Pagination.Next disabled={currentPage === totalPages}
+                                     onClick={() => setCurrentPage(currentPage + 1)}/>
+                </Pagination>
+            )}
+
 
             <div className="container">
                 <div className="row">
@@ -324,6 +390,7 @@ export default function Home() {
                                             }
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>

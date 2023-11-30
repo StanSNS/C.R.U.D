@@ -1,6 +1,8 @@
 package backend.repository;
 
 import backend.entity.UserEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -12,46 +14,62 @@ import java.util.List;
 public interface UserEntityRepository extends JpaRepository<UserEntity, Long> {
 
     /**
-     * Finds all users with a given last name.
+     * Finds users by last name.
      *
      * @param lastName The last name to search for.
-     * @return List<UserEntity> A list of user entities with the specified last name.
+     * @param pageable Pagination information.
+     * @return Page<UserEntity> A page of users with the specified last name.
      */
-    List<UserEntity> findAllByLastName(String lastName);
-
-    /**
-     * Finds all users with a given first name.
-     *
-     * @param firstName The last name to search for.
-     * @return List<UserEntity> A list of user entities with the specified first name.
-     */
-    List<UserEntity> findAllByFirstName(String firstName);
-
-    /**
-     * Finds all users with a given phone number.
-     *
-     * @param phoneNumber The last name to search for.
-     * @return List<UserEntity> A list of user entities with the specified phone number.
-     */
-    List<UserEntity> findAllByPhoneNumber(String phoneNumber);
+    Page<UserEntity> findAllByLastName(String lastName, Pageable pageable);
 
 
     /**
-     * Finds all users with a given email.
+     * Finds users by first name.
      *
-     * @param email The last name to search for.
-     * @return List<UserEntity> A list of user entities with the specified email.
+     * @param firstName The first name to search for.
+     * @param pageable Pagination information.
+     * @return Page<UserEntity> A page of users with the specified first name.
      */
-    List<UserEntity> findAllByEmail(String email);
+    Page<UserEntity> findAllByFirstName(String firstName, Pageable pageable);
+
+
+    /**
+     * Finds users by phone number.
+     *
+     * @param phoneNumber The phone number to search for.
+     * @param pageable Pagination information.
+     * @return Page<UserEntity> A page of users with the specified phone number.
+     */
+    Page<UserEntity> findAllByPhoneNumber(String phoneNumber, Pageable pageable);
+
+
+    /**
+     * Finds users by email.
+     *
+     * @param email The email to search for.
+     * @param pageable Pagination information.
+     * @return Page<UserEntity> A page of users with the specified email.
+     */
+    Page<UserEntity> findAllByEmail(String email, Pageable pageable);
+
+
+    /**
+     * Finds all users.
+     *
+     * @param pageable Pagination information.
+     * @return Page<UserEntity> A page containing all users.
+     */
+    Page<UserEntity> findAll(Pageable pageable);
 
 
     /**
      * Finds all users ordered by last name and date of birth.
      *
-     * @return List<UserEntity> A list of user entities ordered by last name and date of birth.
+     * @param pageable Pagination information.
+     * @return Page<UserEntity> A page of users ordered by last name and date of birth.
      */
     @Query(value = "SELECT * FROM users ORDER BY last_name, STR_TO_DATE(date_of_birth, '%d/%m/%Y')", nativeQuery = true)
-    List<UserEntity> findAllUsersOrderedByLastNameAndDateOfBirth();
+    Page<UserEntity> findAllUsersOrderedByLastNameAndDateOfBirth(Pageable pageable);
 
 
     /**

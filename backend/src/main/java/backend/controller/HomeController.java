@@ -28,15 +28,18 @@ public class HomeController {
 
 
     /**
-     * Retrieves users based on the specified action.
+     * Retrieves users based on the specified action and parameters.
      *
-     * @param action               The action to perform (e.g., get all users by default, sort users, etc.).
-     * @param email                The email of the user for authentication.
-     * @param password             The password of the user for authentication.
-     * @param selectedUserEmail    The email of the selected user (optional).
-     * @param searchTerm           The search term (optional).
-     * @param selectedSearchOption The selected search option (optional).
-     * @return ResponseEntity<?>   A response entity containing user data or an error response.
+     * @param action              The action to perform (e.g., "all_users_default", "all_users_sort_by_last_name_and_dob", etc.).
+     * @param email               The email for user validation.
+     * @param password            The password for user validation.
+     * @param selectedUserEmail   The email of the selected user (required for the "get_selected_user" action).
+     * @param searchTerm          The term to search for (required for the "all_users_found_by_parameter" action).
+     * @param selectedSearchOption The option selected for searching (required for the "all_users_found_by_parameter" action).
+     * @param currentPage         The current page number.
+     * @param sizeOnPage          The number of items per page.
+     * @return ResponseEntity<?> A response entity containing the result of the specified action.
+     * @throws MissingParameterException If required parameters are missing.
      */
     @GetMapping
     public ResponseEntity<?> getUsers(@RequestParam String action,
@@ -44,17 +47,29 @@ public class HomeController {
                                       @RequestParam String password,
                                       @RequestParam(required = false) String selectedUserEmail,
                                       @RequestParam(required = false) String searchTerm,
-                                      @RequestParam(required = false) String selectedSearchOption) {
+                                      @RequestParam(required = false) String selectedSearchOption,
+                                      @RequestParam Integer currentPage,
+                                      @RequestParam Integer sizeOnPage) {
 
         return switch (action) {
             case ALL_USERS_DEFAULT ->
-                    new ResponseEntity<>(homeService.getAllUsersByDefault(email, password), HttpStatus.OK);
+                    new ResponseEntity<>(homeService.getAllUsersByDefault(email, password, currentPage, sizeOnPage), HttpStatus.OK);
+
             case ALL_USERS_SORT_BY_LAST_NAME_AND_DOB ->
-                    new ResponseEntity<>(homeService.getAllUsersOrderedByLastNameAndDateOfBirth(email, password), HttpStatus.OK);
-            case ALL_USERS_FOUND_BY_PARAMETER ->
-                    new ResponseEntity<>(homeService.getAllUsersByParameter(email, password, UriComponentsBuilder.fromUriString(searchTerm).build().encode().toUriString(), selectedSearchOption), HttpStatus.OK);
+                    new ResponseEntity<>(homeService.getAllUsersOrderedByLastNameAndDateOfBirth(email, password, currentPage, sizeOnPage), HttpStatus.OK);
+
+            case ALL_USERS_FOUND_BY_PARAMETER -> new ResponseEntity<>(homeService
+                    .getAllUsersByParameter(email,
+                            password,
+                            UriComponentsBuilder.fromUriString(searchTerm).build().encode().toUriString(),
+                            selectedSearchOption,
+                            currentPage,
+                            sizeOnPage)
+                    , HttpStatus.OK);
+
             case GET_SELECTED_USER ->
                     new ResponseEntity<>(homeService.getSelectedUser(email, password, selectedUserEmail), HttpStatus.OK);
+
             default -> throw new MissingParameterException();
         };
     }
@@ -97,16 +112,16 @@ public class HomeController {
     /**
      * Edits user details based on the provided email, password, and user email to change.
      * <p>
-      This endpoint is mapped to "/home" using the HTTP PUT method. It requires three
-      request parameters, "email", "password", "emailUserToChange", and a request body containing
-      the new user data, to authenticate and edit a user's details.
+     * This endpoint is mapped to "/home" using the HTTP PUT method. It requires three
+     * request parameters, "email", "password", "emailUserToChange", and a request body containing
+     * the new user data, to authenticate and edit a user's details.
      *
-     * @param email              The email of the user initiating the edit (for authentication).
-     * @param password           The password of the user initiating the edit (for authentication).
-     * @param emailUserToChange  The email of the user whose details are to be edited.
-     * @param newUserDataObject  The request body containing the new user data.
+     * @param email             The email of the user initiating the edit (for authentication).
+     * @param password          The password of the user initiating the edit (for authentication).
+     * @param emailUserToChange The email of the user whose details are to be edited.
+     * @param newUserDataObject The request body containing the new user data.
      * @return ResponseEntity<AuthResponseDTO> A response entity containing the updated user details
-     *                                        and authentication data with a status of HttpStatus.OK if the edit is successful.
+     * and authentication data with a status of HttpStatus.OK if the edit is successful.
      * @apiNote This endpoint is designed to be used for editing a user's details by providing valid
      * email and password credentials, the email of the user whose details are to be edited,
      * and the new user data in the request body.
